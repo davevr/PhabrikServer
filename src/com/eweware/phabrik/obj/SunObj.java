@@ -20,4 +20,9 @@ public class SunObj {
     public double		m2;
     public double		e;
     public double		a;
+
+    public int earthlike		 = 0;
+    public int habitable		 = 0;
+    public int habitable_jovians = 0;
+
 }

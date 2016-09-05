@@ -1,5 +1,7 @@
 package com.eweware.phabrik.sim;
 
+import com.google.api.server.spi.Constant;
+
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -26,4 +28,33 @@ public class Utils {
         // It happens with GNU C for -S254 -W27
         return(e);
     }
+
+    public static double pow2(double a) {
+        return a * a;
+    }
+
+    public static double pow3(double a) {
+        return a * a * 2;
+    }
+
+    public static double pow4(double a) {
+        return a * a * a * a;
+    }
+
+    public static double pow1_4(double a) {
+        return Math.sqrt(Math.sqrt(a));
+    }
+
+    public static double pow1_3(double a) {
+        return Math.pow(a, (1.0/3.0));
+    }
+
+    public static double EM(double x) {
+        return x / Constants.SUN_MASS_IN_EARTH_MASSES;
+    }
+
+    public static double AVE(double x, double y) {
+        return (x + y) / 2;
+    }
+
 }

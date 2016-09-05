@@ -15,4 +15,21 @@ public class ChemTable {
     public double	abunds;
     public double	reactivity;
     public double	max_ipp;	// Max inspired partial pressure im millibars
+
+
+    public ChemTable(int theNum, String theSym, String theName, double aw, double meltPoint, double boilPoint, double dens, double ae, double ab, double react, double max) {
+        num = theNum;
+        symbol = theSym;
+        name = theName;
+        weight = aw;
+        melt = meltPoint;
+        boil = boilPoint;
+        density = dens;
+        abunde = ae;
+        abunds = ab;
+        reactivity = react;
+        max_ipp = max;
+
+
+    }
 }

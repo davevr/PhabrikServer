@@ -4,6 +4,7 @@ package com.eweware.phabrik.sim;
  * Created by Dave on 9/2/2016.
  */
 public class Constants {
+    public static double RADIANS_PER_ROTATION = Math.PI * 2;
     public static double ECCENTRICITY_COEFF =		(0.077)	;		/* Dole's was 0.077			*/
     public static double PROTOPLANET_MASS =		(1.0E-15)	;	/* Units of solar masses	*/
     public static double CHANGE_IN_EARTH_ANG_VEL = (-1.3E-15)		;/* Units of radians/sec/year*/
@@ -45,7 +46,6 @@ public class Constants {
     public static double MAX_NH3_IPP =	(100. * PPM_PRSSURE)	;	/* Dole, p. 18				*/
     public static double MAX_O3_IPP =	(0.1 * PPM_PRSSURE)	;		/* Dole, p. 18				*/
     public static double MAX_CH4_IPP =	(50000. * PPM_PRSSURE);		/* Dole, p. 18				*/
-
 
 
     public static double EARTH_CONVECTION_FACTOR = (0.43)	;		/* from Hart, eq.20			*/
@@ -152,4 +152,5 @@ public class Constants {
 /*	 The following defines are used in determining the fraction of a planet	 */
 /*	covered with clouds in function cloud_fraction in file enviro.c.		 */
     public static double Q1_36 =					(1.258E19);		/* grams	*/
+    public static double Q2_36 =                    0.0698; // 1/kelvin
 }

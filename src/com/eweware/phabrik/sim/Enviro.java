@@ -3,28 +3,28 @@ package com.eweware.phabrik.sim;
 /**
  * Created by Dave on 9/2/2016.
  */
+import com.eweware.phabrik.obj.PlanetObj;
+
 public class Enviro {
 
-    public enum breathability_constants
 
-    char* breathability_phrase[4] =
+    public static String breathability_phrase[] =
     {
         "none",
-                "breathable",
-                "unbreathable",
-                "poisonous"
+        "breathable",
+        "unbreathable",
+        "poisonous"
     };
 
-    long double luminosity(mass_ratio)
-    long double mass_ratio;
+    double luminosity(double mass_ratio)
     {
-        long double n;
+        double n;
 
         if (mass_ratio < 1.0)
             n = 1.75 * (mass_ratio - 0.1) + 3.325;
         else
             n = 0.5 * (2.0 - mass_ratio) + 4.4;
-        return(pow(mass_ratio,n));
+        return(Math.pow(mass_ratio,n));
     }
 
 
@@ -33,11 +33,11 @@ public class Enviro {
 /*	 the orbital 'zone' of the particle.									*/
 /*--------------------------------------------------------------------------*/
 
-    int orb_zone(long double luminosity, long double orb_radius)
+    int orb_zone(double luminosity, double orb_radius)
     {
-        if (orb_radius < (4.0 * sqrt(luminosity)))
+        if (orb_radius < (4.0 * Math.sqrt(luminosity)))
             return(1);
-        else if (orb_radius < (15.0 * sqrt(luminosity)))
+        else if (orb_radius < (15.0 * Math.sqrt(luminosity)))
             return(2);
         else
             return(3);
@@ -49,14 +49,13 @@ public class Enviro {
 /*	 of grams/cc.  The radius returned is in units of km.					*/
 /*--------------------------------------------------------------------------*/
 
-    long double volume_radius(mass, density)
-    long double mass, density;
+    double volume_radius(double mass, double density)
     {
-        long double volume;
+        double volume;
 
-        mass = mass * SOLAR_MASS_IN_GRAMS;
+        mass = mass * Constants.SOLAR_MASS_IN_GRAMS;
         volume = mass / density;
-        return(pow((3.0 * volume) / (4.0 * PI),(1.0 / 3.0)) / CM_PER_KM);
+        return(Math.pow((3.0 * volume) / (4.0 * Math.PI),(1.0 / 3.0)) / Constants.CM_PER_KM);
     }
 
 /*--------------------------------------------------------------------------*/
@@ -69,12 +68,10 @@ public class Enviro {
 /*	 eq.23, which appears on page 840.										*/
 /*--------------------------------------------------------------------------*/
 
-    long double kothari_radius(mass, giant, zone)
-    long double mass;
-    int giant, zone;
+    double kothari_radius(double mass, boolean giant, int zone)
     {
-        volatile long double temp1;
-        long double temp, temp2, atomic_weight, atomic_num;
+        double temp1;
+        double temp, temp2, atomic_weight, atomic_num;
 
         if (zone == 1)
         {
@@ -119,17 +116,17 @@ public class Enviro {
 
         temp1 = atomic_weight * atomic_num;
 
-        temp = (2.0 * BETA_20 * pow(SOLAR_MASS_IN_GRAMS,(1.0 / 3.0)))
-                / (A1_20 * pow(temp1, (1.0 / 3.0)));
+        temp = (2.0 * Constants.BETA_20 * Math.pow(Constants.SOLAR_MASS_IN_GRAMS,(1.0 / 3.0)))
+                / (Constants.A1_20 * Math.pow(temp1, (1.0 / 3.0)));
 
-        temp2 = A2_20 * pow(atomic_weight,(4.0 / 3.0)) * pow(SOLAR_MASS_IN_GRAMS,(2.0 / 3.0));
-        temp2 = temp2 * pow(mass,(2.0 / 3.0));
-        temp2 = temp2 / (A1_20 * pow2(atomic_num));
+        temp2 = Constants.A2_20 * Math.pow(atomic_weight,(4.0 / 3.0)) * Math.pow(Constants.SOLAR_MASS_IN_GRAMS,(2.0 / 3.0));
+        temp2 = temp2 * Math.pow(mass,(2.0 / 3.0));
+        temp2 = temp2 / (Constants.A1_20 * Math.pow(atomic_num,2));
         temp2 = 1.0 + temp2;
         temp = temp / temp2;
-        temp = (temp * pow(mass,(1.0 / 3.0))) / CM_PER_KM;
+        temp = (temp * Math.pow(mass,(1.0 / 3.0))) / Constants.CM_PER_KM;
 
-        temp /= JIMS_FUDGE;			/* Make Earth = actual earth */
+        temp /= Constants.JIMS_FUDGE;			/* Make Earth = actual earth */
 
         return(temp);
     }
@@ -140,13 +137,13 @@ public class Enviro {
 /*	is in units of AU.	The density is returned in units of grams/cc.		*/
 /*--------------------------------------------------------------------------*/
 
-    long double empirical_density(long double mass, long double orb_radius,
-                                  long double r_ecosphere, int gas_giant)
+    double empirical_density(double mass, double orb_radius,
+                                  double r_ecosphere, boolean gas_giant)
     {
-        long double temp;
+        double temp;
 
-        temp = pow(mass * SUN_MASS_IN_EARTH_MASSES,(1.0 / 8.0));
-        temp = temp * pow1_4(r_ecosphere / orb_radius);
+        temp = Math.pow(mass * Constants.SUN_MASS_IN_EARTH_MASSES,(1.0 / 8.0));
+        temp = temp * Utils.pow1_4(r_ecosphere / orb_radius);
         if (gas_giant)
             return(temp * 1.2);
         else
@@ -159,14 +156,13 @@ public class Enviro {
 /*	radius is in km.  The density is returned in units of grams/cc.			*/
 /*--------------------------------------------------------------------------*/
 
-    long double volume_density(mass, equat_radius)
-    long double mass, equat_radius;
+    double volume_density(double mass, double equat_radius)
     {
-        long double volume;
+        double volume;
 
-        mass = mass * SOLAR_MASS_IN_GRAMS;
-        equat_radius = equat_radius * CM_PER_KM;
-        volume = (4.0 * PI * pow3(equat_radius)) / 3.0;
+        mass = mass * Constants.SOLAR_MASS_IN_GRAMS;
+        equat_radius = equat_radius * Constants.CM_PER_KM;
+        volume = (4.0 * Math.PI * Utils.pow3(equat_radius)) / 3.0;
         return(mass / volume);
     }
 
@@ -176,13 +172,12 @@ public class Enviro {
 /*	masses.	 The period returned is in terms of Earth days.					*/
 /*--------------------------------------------------------------------------*/
 
-    long double period(separation, small_mass, large_mass)
-    long double separation, small_mass, large_mass;
+    double period(double separation, double small_mass, double large_mass)
     {
-        long double period_in_years;
+        double period_in_years;
 
-        period_in_years = sqrt(pow3(separation) / (small_mass + large_mass));
-        return(period_in_years * DAYS_IN_A_YEAR);
+        period_in_years = Math.sqrt(Utils.pow3(separation) / (small_mass + large_mass));
+        return(period_in_years * Constants.DAYS_IN_A_YEAR);
     }
 
 
@@ -203,61 +198,61 @@ public class Enviro {
 /*	 The length of the day is returned in units of hours.					*/
 /*--------------------------------------------------------------------------*/
 
-    long double day_length(planet_pointer	planet)
+    double day_length(PlanetObj	planet)
     {
-        long double planetary_mass_in_grams = planet->mass * SOLAR_MASS_IN_GRAMS;
-        long double	equatorial_radius_in_cm = planet->radius * CM_PER_KM;
-        long double	year_in_hours			= planet->orb_period * 24.0;
-        int giant = (planet->type == tGasGiant ||
-                planet->type == tSubGasGiant ||
-                        planet->type == tSubSubGasGiant);
-        long double	k2;
-        long double	base_angular_velocity;
-        long double	change_in_angular_velocity;
-        long double	ang_velocity;
-        long double	spin_resonance_factor;
-        long double	day_in_hours;
+        double planetary_mass_in_grams = planet.mass * Constants.SOLAR_MASS_IN_GRAMS;
+        double	equatorial_radius_in_cm = planet.radius * Constants.CM_PER_KM;
+        double	year_in_hours			= planet.orb_period * 24.0;
+        boolean giant = (planet.planetType == PlanetObj.planet_type.tGasGiant ||
+                planet.planetType == PlanetObj.planet_type.tSubGasGiant ||
+                        planet.planetType == PlanetObj.planet_type.tSubSubGasGiant);
+        double	k2;
+        double	base_angular_velocity;
+        double	change_in_angular_velocity;
+        double	ang_velocity;
+        double	spin_resonance_factor;
+        double	day_in_hours;
 
-        int stopped = FALSE;
+        boolean stopped = false;
 
-        planet->resonant_period = FALSE;	/* Warning: Modify the planet */
+        planet.resonant_period = false;	/* Warning: Modify the planet */
 
         if (giant)
             k2 = 0.24;
         else
             k2 = 0.33;
 
-        base_angular_velocity = sqrt(2.0 * J * (planetary_mass_in_grams) /
-                (k2 * pow2(equatorial_radius_in_cm)));
+        base_angular_velocity = Math.sqrt(2.0 * Constants.J * (planetary_mass_in_grams) /
+                (k2 * Math.pow(equatorial_radius_in_cm, 2)));
 
 /*	This next calculation determines how much the planet's rotation is	 */
 /*	slowed by the presence of the star.								 */
 
-        change_in_angular_velocity = CHANGE_IN_EARTH_ANG_VEL *
-                (planet->density / EARTH_DENSITY) *
-                (equatorial_radius_in_cm / EARTH_RADIUS) *
-                (EARTH_MASS_IN_GRAMS / planetary_mass_in_grams) *
-                pow(planet->sun->mass, 2.0) *
-                (1.0 / pow(planet->a, 6.0));
+        change_in_angular_velocity = Constants.CHANGE_IN_EARTH_ANG_VEL *
+                (planet.density / Constants.EARTH_DENSITY) *
+                (equatorial_radius_in_cm / Constants.EARTH_RADIUS) *
+                (Constants.EARTH_MASS_IN_GRAMS / planetary_mass_in_grams) *
+                Math.pow(planet.sun.mass, 2.0) *
+                (1.0 / Math.pow(planet.a, 6.0));
         ang_velocity = base_angular_velocity + (change_in_angular_velocity *
-                planet->sun->age);
+                planet.sun.age);
 
 /* Now we change from rad/sec to hours/rotation.						 */
 
         if (ang_velocity <= 0.0)
         {
-            stopped = TRUE;
-            day_in_hours = INCREDIBLY_LARGE_NUMBER ;
+            stopped = true;
+            day_in_hours = Constants.INCREDIBLY_LARGE_NUMBER ;
         }
         else
-            day_in_hours = RADIANS_PER_ROTATION / (SECONDS_PER_HOUR * ang_velocity);
+            day_in_hours = Constants.RADIANS_PER_ROTATION / (Constants.SECONDS_PER_HOUR * ang_velocity);
 
         if ((day_in_hours >= year_in_hours) || stopped)
         {
-            if (planet->e > 0.1)
+            if (planet.e > 0.1)
             {
-                spin_resonance_factor 	= (1.0 - planet->e) / (1.0 + planet->e);
-                planet->resonant_period 	= TRUE;
+                spin_resonance_factor 	= (1.0 - planet.e) / (1.0 + planet.e);
+                planet.resonant_period 	= true;
                 return(spin_resonance_factor * year_in_hours);
             }
             else
@@ -273,12 +268,11 @@ public class Enviro {
 /*	 Inclination is returned in units of degrees.							*/
 /*--------------------------------------------------------------------------*/
 
-    int inclination(orb_radius)
-    long double orb_radius;
+    int inclination(double orb_radius)
     {
         int temp;
 
-        temp = (int)(pow(orb_radius,0.2) * about(EARTH_AXIAL_TILT,0.4));
+        temp = (int)(Math.pow(orb_radius,0.2) * Utils.about(Constants.EARTH_AXIAL_TILT,0.4));
         return(temp % 360);
     }
 
@@ -290,14 +284,13 @@ public class Enviro {
 /*	velocity returned is in cm/sec.											*/
 /*--------------------------------------------------------------------------*/
 
-    long double escape_vel(mass, radius)
-    long double mass, radius;
+    double escape_vel(double mass, double radius)
     {
-        long double mass_in_grams, radius_in_cm;
+        double mass_in_grams, radius_in_cm;
 
-        mass_in_grams = mass * SOLAR_MASS_IN_GRAMS;
-        radius_in_cm = radius * CM_PER_KM;
-        return(sqrt(2.0 * GRAV_CONSTANT * mass_in_grams / radius_in_cm));
+        mass_in_grams = mass * Constants.SOLAR_MASS_IN_GRAMS;
+        radius_in_cm = radius * Constants.CM_PER_KM;
+        return(Math.sqrt(2.0 * Constants.GRAV_CONSTANT * mass_in_grams / radius_in_cm));
     }
 
 
@@ -308,10 +301,10 @@ public class Enviro {
 /*	Orbital radius is in A.U.(ie: in units of the earth's orbital radius).	*/
 /*--------------------------------------------------------------------------*/
 
-    long double rms_vel(long double molecular_weight, long double exospheric_temp)
+    double rms_vel(double molecular_weight, double exospheric_temp)
     {
-        return(sqrt((3.0 * MOLAR_GAS_CONST * exospheric_temp) / molecular_weight)
-                * CM_PER_METER);
+        return(Math.sqrt((3.0 * Constants.MOLAR_GAS_CONST * exospheric_temp) / molecular_weight)
+                * Constants.CM_PER_METER);
     }
 
 
@@ -322,13 +315,12 @@ public class Enviro {
 /*	kilometers.																*/
 /*--------------------------------------------------------------------------*/
 
-    long double molecule_limit(mass, equat_radius, exospheric_temp)
-    long double mass, equat_radius, exospheric_temp;
+    double molecule_limit(double mass, double equat_radius, double exospheric_temp)
     {
-        long double esc_velocity = escape_vel(mass,equat_radius);
+        double esc_velocity = escape_vel(mass,equat_radius);
 
-        return ((3.0 * MOLAR_GAS_CONST * exospheric_temp) /
-                (pow2((esc_velocity/ GAS_RETENTION_THRESHOLD) / CM_PER_METER)));
+        return ((3.0 * Constants.MOLAR_GAS_CONST * exospheric_temp) /
+                (Utils.pow2((esc_velocity/ Constants.GAS_RETENTION_THRESHOLD) / Constants.CM_PER_METER)));
 
     }
 
@@ -338,11 +330,10 @@ public class Enviro {
 /*	acceleration is returned in units of cm/sec2.							*/
 /*--------------------------------------------------------------------------*/
 
-    long double acceleration(mass, radius)
-    long double mass, radius;
+    double acceleration(double mass, double radius)
     {
-        return(GRAV_CONSTANT * (mass * SOLAR_MASS_IN_GRAMS) /
-                pow2(radius * CM_PER_KM));
+        return(Constants.GRAV_CONSTANT * (mass * Constants.SOLAR_MASS_IN_GRAMS) /
+                Utils.pow2(radius * Constants.CM_PER_KM));
     }
 
 
@@ -352,29 +343,26 @@ public class Enviro {
 /*	units of Earth gravities.												*/
 /*--------------------------------------------------------------------------*/
 
-    long double gravity(acceleration)
-    long double acceleration;
+    double gravity(double acceleration)
     {
-        return(acceleration / EARTH_ACCELERATION);
+        return(acceleration / Constants.EARTH_ACCELERATION);
     }
 
 /*--------------------------------------------------------------------------*/
 /*	This implements Fogg's eq.17.  The 'inventory' returned is unitless.	*/
 /*--------------------------------------------------------------------------*/
 
-    long double vol_inventory(mass, escape_vel, rms_vel, stellar_mass, zone,
-                              greenhouse_effect, accreted_gas)
-    long double mass, escape_vel, rms_vel, stellar_mass;
-    int zone, greenhouse_effect, accreted_gas;
+    double vol_inventory(double mass, double escape_vel, double rms_vel, double stellar_mass, int zone,
+                              boolean greenhouse_effect, boolean accreted_gas)
     {
-        long double velocity_ratio, proportion_const, temp1, temp2, earth_units;
+        double velocity_ratio, proportion_const, temp1, temp2, earth_units;
 
         velocity_ratio = escape_vel / rms_vel;
-        if (velocity_ratio >= GAS_RETENTION_THRESHOLD)
+        if (velocity_ratio >=Constants. GAS_RETENTION_THRESHOLD)
         {
             switch (zone) {
                 case 1:
-                    proportion_const = 140000.0;	/* 100 -> 140 JLB */
+                    proportion_const = 140000.0;	/* 100 . 140 JLB */
                     break;
                 case 2:
                     proportion_const = 75000.0;
@@ -384,17 +372,17 @@ public class Enviro {
                     break;
                 default:
                     proportion_const = 0.0;
-                    printf("Error: orbital zone not initialized correctly!\n");
+                    //printf("Error: orbital zone not initialized correctly!\n");
                     break;
             }
-            earth_units = mass * SUN_MASS_IN_EARTH_MASSES;
+            earth_units = mass * Constants.SUN_MASS_IN_EARTH_MASSES;
             temp1 = (proportion_const * earth_units) / stellar_mass;
-            temp2 = about(temp1,0.2);
+            temp2 = Utils.about(temp1,0.2);
             temp2 = temp1;
             if (greenhouse_effect || accreted_gas)
                 return(temp2);
             else
-                return(temp2 / 140.0);	/* 100 -> 140 JLB */
+                return(temp2 / 140.0);	/* 100 . 140 JLB */
         }
         else
             return(0.0);
@@ -410,13 +398,12 @@ public class Enviro {
 /*	fudge factor (EARTH_SURF_PRES_IN_MILLIBARS / 1000.) to correct for that	*/
 /*--------------------------------------------------------------------------*/
 
-    long double pressure(volatile_gas_inventory, equat_radius, gravity)
-    long double volatile_gas_inventory, equat_radius, gravity;
+    double pressure(double volatile_gas_inventory, double equat_radius, double gravity)
     {
-        equat_radius = KM_EARTH_RADIUS / equat_radius;
+        equat_radius = Constants.KM_EARTH_RADIUS / equat_radius;
         return(volatile_gas_inventory * gravity *
-                (EARTH_SURF_PRES_IN_MILLIBARS / 1000.) /
-                pow2(equat_radius));
+                (Constants.EARTH_SURF_PRES_IN_MILLIBARS / 1000.) /
+                Utils.pow2(equat_radius));
     }
 
 /*--------------------------------------------------------------------------*/
@@ -425,13 +412,12 @@ public class Enviro {
 /*	 returned in units of Kelvin.  This is Fogg's eq.21.					*/
 /*--------------------------------------------------------------------------*/
 
-    long double boiling_point(surf_pressure)
-    long double surf_pressure;
+    double boiling_point(double surf_pressure)
     {
-        long double surface_pressure_in_bars;
+        double surface_pressure_in_bars;
 
-        surface_pressure_in_bars = surf_pressure / MILLIBARS_PER_BAR;
-        return (1.0 / ((log(surface_pressure_in_bars) / -5050.5) +
+        surface_pressure_in_bars = surf_pressure / Constants.MILLIBARS_PER_BAR;
+        return (1.0 / ((Math.log(surface_pressure_in_bars) / -5050.5) +
                 (1.0 / 373.0) ));
 
     }
@@ -445,13 +431,12 @@ public class Enviro {
 /*	 surface covered by water is 71%, not 75% as Fogg used.					*/
 /*--------------------------------------------------------------------------*/
 
-    long double hydro_fraction(volatile_gas_inventory, planet_radius)
-    long double volatile_gas_inventory, planet_radius;
+    double hydro_fraction(double volatile_gas_inventory, double planet_radius)
     {
-        long double temp;
+        double temp;
 
         temp = (0.71 * volatile_gas_inventory / 1000.0)
-                * pow2(KM_EARTH_RADIUS / planet_radius);
+                * Utils.pow2(Constants.KM_EARTH_RADIUS / planet_radius);
         if (temp >= 1.0)
             return(1.0);
         else
@@ -470,21 +455,19 @@ public class Enviro {
 /*	 covered by one Kg. of cloud.											*/
 /*--------------------------------------------------------------------------*/
 
-    long double cloud_fraction(surf_temp, smallest_MW_retained, equat_radius, hydro_fraction)
-    long double surf_temp, smallest_MW_retained, equat_radius,
-            hydro_fraction;
+    double cloud_fraction(double surf_temp, double smallest_MW_retained, double equat_radius, double hydro_fraction)
     {
-        long double water_vapor_in_kg, fraction, surf_area, hydro_mass;
+        double water_vapor_in_kg, fraction, surf_area, hydro_mass;
 
-        if (smallest_MW_retained > WATER_VAPOR)
+        if (smallest_MW_retained > Constants.WATER_VAPOR)
             return(0.0);
         else
         {
-            surf_area = 4.0 * PI * pow2(equat_radius);
-            hydro_mass = hydro_fraction * surf_area * EARTH_WATER_MASS_PER_AREA;
+            surf_area = 4.0 * Math.PI * Utils.pow2(equat_radius);
+            hydro_mass = hydro_fraction * surf_area * Constants.EARTH_WATER_MASS_PER_AREA;
             water_vapor_in_kg = (0.00000001 * hydro_mass) *
-                    exp(Q2_36 * (surf_temp - EARTH_AVERAGE_KELVIN));
-            fraction = CLOUD_COVERAGE_FACTOR * water_vapor_in_kg / surf_area;
+                    Math.exp(Constants.Q2_36 * (surf_temp - Constants.EARTH_AVERAGE_KELVIN));
+            fraction = Constants.CLOUD_COVERAGE_FACTOR * water_vapor_in_kg / surf_area;
             if (fraction >= 1.0)
                 return(1.0);
             else
@@ -502,14 +485,13 @@ public class Enviro {
 /*	 is approximatly .016 (=1.6%).											*/
 /*--------------------------------------------------------------------------*/
 
-    long double ice_fraction(hydro_fraction, surf_temp)
-    long double hydro_fraction, surf_temp;
+    double ice_fraction(double hydro_fraction, double surf_temp)
     {
-        long double temp;
+        double temp;
 
         if (surf_temp > 328.0)
             surf_temp = 328.0;
-        temp = pow(((328.0 - surf_temp) / 90.0), 5.0);
+        temp = Math.pow(((328.0 - surf_temp) / 90.0), 5.0);
         if (temp > (1.5 * hydro_fraction))
             temp = (1.5 * hydro_fraction);
         if (temp >= 1.0)
@@ -524,21 +506,19 @@ public class Enviro {
 /*	radius in AU, and the temperature returned is in Kelvin.				*/
 /*--------------------------------------------------------------------------*/
 
-    long double eff_temp(ecosphere_radius, orb_radius, albedo)
-    long double ecosphere_radius, orb_radius, albedo;
+    double eff_temp(double ecosphere_radius, double orb_radius, double albedo)
     {
-        return(sqrt(ecosphere_radius / orb_radius)
-                * pow1_4((1.0 - albedo) / (1.0 - EARTH_ALBEDO))
-                * EARTH_EFFECTIVE_TEMP);
+        return(Math.sqrt(ecosphere_radius / orb_radius)
+                * Utils.pow1_4((1.0 - albedo) / (1.0 - Constants.EARTH_ALBEDO))
+                * Constants.EARTH_EFFECTIVE_TEMP);
     }
 
 
-    long double est_temp(ecosphere_radius, orb_radius, albedo)
-    long double ecosphere_radius, orb_radius, albedo;
+    double est_temp(double ecosphere_radius, double orb_radius, double albedo)
     {
-        return(sqrt(ecosphere_radius / orb_radius)
-                * pow1_4((1.0 - albedo) / (1.0 - EARTH_ALBEDO))
-                * EARTH_AVERAGE_KELVIN);
+        return(Math.sqrt(ecosphere_radius / orb_radius)
+                * Utils.pow1_4((1.0 - albedo) / (1.0 - Constants.EARTH_ALBEDO))
+                * Constants.EARTH_AVERAGE_KELVIN);
     }
 
 
@@ -558,14 +538,14 @@ public class Enviro {
 /*	Neither zone, nor r_greenhouse are used in this version				JLB	*/
 /*--------------------------------------------------------------------------*/
 
-    int grnhouse(long double r_ecosphere, long double orb_radius)
+    boolean grnhouse(double r_ecosphere, double orb_radius)
     {
-        long double	temp = eff_temp(r_ecosphere, orb_radius, GREENHOUSE_TRIGGER_ALBEDO);
+        double	temp = eff_temp(r_ecosphere, orb_radius, Constants.GREENHOUSE_TRIGGER_ALBEDO);
 
-        if (temp > FREEZING_POINT_OF_WATER)
-            return(TRUE);
+        if (temp > Constants.FREEZING_POINT_OF_WATER)
+            return(true);
         else
-            return(FALSE);
+            return(false);
     }
 
 
@@ -574,16 +554,15 @@ public class Enviro {
 /*	Earth's Atmosphere" article.  The effective temperature given is in		*/
 /*	units of Kelvin, as is the rise in temperature produced by the			*/
 /*	greenhouse effect, which is returned.									*/
-/*	I tuned this by changing a pow(x,.25) to pow(x,.4) to match Venus - JLB	*/
+/*	I tuned this by changing a Math.pow(x,.25) to Math.pow(x,.4) to match Venus - JLB	*/
 /*--------------------------------------------------------------------------*/
 
-    long double green_rise(optical_depth, effective_temp, surf_pressure)
-    long double optical_depth, effective_temp, surf_pressure;
+    double green_rise(double optical_depth, double effective_temp, double surf_pressure)
     {
-        long double convection_factor = EARTH_CONVECTION_FACTOR *
-            pow(surf_pressure /
-                    EARTH_SURF_PRES_IN_MILLIBARS, 0.4);
-        long double rise = (pow1_4(1.0 + 0.75 * optical_depth) - 1.0) *
+        double convection_factor = Constants.EARTH_CONVECTION_FACTOR *
+            Math.pow(surf_pressure /
+                    Constants.EARTH_SURF_PRES_IN_MILLIBARS, 0.4);
+        double rise = (Utils.pow1_4(1.0 + 0.75 * optical_depth) - 1.0) *
             effective_temp * convection_factor;
 
         if (rise < 0.0) rise = 0.0;
@@ -598,10 +577,9 @@ public class Enviro {
 /*	 of the three major components of albedo that lie below the clouds.		*/
 /*--------------------------------------------------------------------------*/
 
-    long double planet_albedo(water_fraction, cloud_fraction, ice_fraction, surf_pressure)
-    long double water_fraction, cloud_fraction, ice_fraction, surf_pressure;
+    double planet_albedo(double water_fraction, double cloud_fraction, double ice_fraction, double surf_pressure)
     {
-        long double rock_fraction, cloud_adjustment, components, cloud_part,
+        double rock_fraction, cloud_adjustment, components, cloud_part,
             rock_part, water_part, ice_part;
 
         rock_fraction = 1.0 - water_fraction - ice_fraction;
@@ -630,19 +608,19 @@ public class Enviro {
         else
             ice_fraction = 0.0;
 
-        cloud_part = cloud_fraction * CLOUD_ALBEDO;		/* about(...,0.2); */
+        cloud_part = cloud_fraction * Constants.CLOUD_ALBEDO;		/* about(...,0.2); */
 
         if (surf_pressure == 0.0)
         {
-            rock_part = rock_fraction * ROCKY_AIRLESS_ALBEDO;	/* about(...,0.3); */
-            ice_part = ice_fraction * AIRLESS_ICE_ALBEDO;		/* about(...,0.4); */
+            rock_part = rock_fraction * Constants.ROCKY_AIRLESS_ALBEDO;	/* about(...,0.3); */
+            ice_part = ice_fraction * Constants.AIRLESS_ICE_ALBEDO;		/* about(...,0.4); */
             water_part = 0;
         }
         else
         {
-            rock_part = rock_fraction * ROCKY_ALBEDO;	/* about(...,0.1); */
-            water_part = water_fraction * WATER_ALBEDO;	/* about(...,0.2); */
-            ice_part = ice_fraction * ICE_ALBEDO;		/* about(...,0.1); */
+            rock_part = rock_fraction * Constants.ROCKY_ALBEDO;	/* about(...,0.1); */
+            water_part = water_fraction * Constants.WATER_ALBEDO;	/* about(...,0.2); */
+            ice_part = ice_fraction * Constants.ICE_ALBEDO;		/* about(...,0.1); */
         }
 
         return(cloud_part + rock_part + water_part + ice_part);
@@ -655,10 +633,9 @@ public class Enviro {
 /*	 planet.																*/
 /*--------------------------------------------------------------------------*/
 
-    long double opacity(molecular_weight, surf_pressure)
-    long double molecular_weight, surf_pressure;
+    double opacity(double molecular_weight, double surf_pressure)
     {
-        long double optical_depth;
+        double optical_depth;
 
         optical_depth = 0.0;
         if ((molecular_weight >= 0.0) && (molecular_weight < 10.0))
@@ -672,19 +649,19 @@ public class Enviro {
         if ((molecular_weight >= 45.0) && (molecular_weight < 100.0))
             optical_depth = optical_depth + 0.05;
 
-        if (surf_pressure >= (70.0 * EARTH_SURF_PRES_IN_MILLIBARS))
+        if (surf_pressure >= (70.0 * Constants.EARTH_SURF_PRES_IN_MILLIBARS))
             optical_depth = optical_depth * 8.333;
         else
-        if (surf_pressure >= (50.0 * EARTH_SURF_PRES_IN_MILLIBARS))
+        if (surf_pressure >= (50.0 * Constants.EARTH_SURF_PRES_IN_MILLIBARS))
             optical_depth = optical_depth * 6.666;
         else
-        if (surf_pressure >= (30.0 * EARTH_SURF_PRES_IN_MILLIBARS))
+        if (surf_pressure >= (30.0 * Constants.EARTH_SURF_PRES_IN_MILLIBARS))
             optical_depth = optical_depth * 3.333;
         else
-        if (surf_pressure >= (10.0 * EARTH_SURF_PRES_IN_MILLIBARS))
+        if (surf_pressure >= (10.0 * Constants.EARTH_SURF_PRES_IN_MILLIBARS))
             optical_depth = optical_depth * 2.0;
         else
-        if (surf_pressure >= (5.0 * EARTH_SURF_PRES_IN_MILLIBARS))
+        if (surf_pressure >= (5.0 * Constants.EARTH_SURF_PRES_IN_MILLIBARS))
             optical_depth = optical_depth * 1.5;
 
         return(optical_depth);
@@ -696,47 +673,46 @@ public class Enviro {
  *	from a planet's atmosphere.
  *	Taken from Dole p. 34. He cites Jeans (1916) & Jones (1923)
  */
-    long double gas_life(long double molecular_weight,
-                         planet_pointer planet)
+    double gas_life(double molecular_weight, PlanetObj planet)
     {
-        long double v = rms_vel(molecular_weight, planet->exospheric_temp);
-        long double g = planet->surf_grav * EARTH_ACCELERATION;
-        long double r = (planet->radius * CM_PER_KM);
-        long double t = (pow3(v) / (2.0 * pow2(g) * r)) * exp((3.0 * g * r) / pow2(v));
-        long double years = t / (SECONDS_PER_HOUR * 24.0 * DAYS_IN_A_YEAR);
+        double v = rms_vel(molecular_weight, planet.exospheric_temp);
+        double g = planet.surf_grav * Constants.EARTH_ACCELERATION;
+        double r = (planet.radius * Constants.CM_PER_KM);
+        double t = (Utils.pow3(v) / (2.0 * Utils.pow2(g) * r)) * Math.exp((3.0 * g * r) / Utils.pow2(v));
+        double years = t / (Constants.SECONDS_PER_HOUR * 24.0 * Constants.DAYS_IN_A_YEAR);
 
-//	long double ve = planet->esc_velocity;
-//	long double k = 2;
-//	long double t2 = ((k * pow3(v) * r) / pow4(ve)) * exp((3.0 * pow2(ve)) / (2.0 * pow2(v)));
-//	long double years2 = t2 / (SECONDS_PER_HOUR * 24.0 * DAYS_IN_A_YEAR);
+//	double ve = planet.esc_velocity;
+//	double k = 2;
+//	double t2 = ((k * pow3(v) * r) / pow4(ve)) * exp((3.0 * pow2(ve)) / (2.0 * pow2(v)));
+//	double years2 = t2 / (SECONDS_PER_HOUR * 24.0 * DAYS_IN_A_YEAR);
 
 //	if (flag_verbose & 0x0040)
 //		fprintf (stderr, "gas_life: %LGs, V ratio: %Lf\n",
 //				years, ve / v);
 
         if (years > 2.0E10)
-            years = INCREDIBLY_LARGE_NUMBER;
+            years = Constants.INCREDIBLY_LARGE_NUMBER;
 
         return years;
     }
 
-    long double min_molec_weight (planet_pointer planet)
+    double min_molec_weight (PlanetObj planet)
     {
-        long double mass    = planet->mass;
-        long double radius  = planet->radius;
-        long double temp    = planet->exospheric_temp;
-        long double target  = 5.0E9;
+        double mass    = planet.mass;
+        double radius  = planet.radius;
+        double temp    = planet.exospheric_temp;
+        double target  = 5.0E9;
 
-        long double guess_1 = molecule_limit (mass, radius, temp);
-        long double	guess_2 = guess_1;
+        double guess_1 = molecule_limit (mass, radius, temp);
+        double	guess_2 = guess_1;
 
-        long double life = gas_life(guess_1, planet);
+        double life = gas_life(guess_1, planet);
 
         int	loops = 0;
 
-        if (NULL != planet->sun)
+        if (null != planet.sun)
         {
-            target = planet->sun->age;
+            target = planet.sun.age;
         }
 
         if (life > target)
@@ -760,7 +736,7 @@ public class Enviro {
 
         while (((guess_2 - guess_1) > 0.1) && (loops++ < 25))
         {
-            long double guess_3 = (guess_1 + guess_2) / 2.0;
+            double guess_3 = (guess_1 + guess_2) / 2.0;
             life			 	= gas_life(guess_3, planet);
 
             if (life < target)
@@ -778,193 +754,152 @@ public class Enviro {
 /*--------------------------------------------------------------------------*/
 /*	 The temperature calculated is in degrees Kelvin.						*/
 /*	 Quantities already known which are used in these calculations:			*/
-/*		 planet->molec_weight												*/
-/*		 planet->surf_pressure												*/
+/*		 planet.molec_weight												*/
+/*		 planet.surf_pressure												*/
 /*		 R_ecosphere														*/
-/*		 planet->a															*/
-/*		 planet->volatile_gas_inventory										*/
-/*		 planet->radius														*/
-/*		 planet->boil_point													*/
+/*		 planet.a															*/
+/*		 planet.volatile_gas_inventory										*/
+/*		 planet.radius														*/
+/*		 planet.boil_point													*/
 /*--------------------------------------------------------------------------*/
 
-    void calculate_surface_temp(planet_pointer 	planet,
-                                int				first,
-                                long double		last_water,
-                                long double 	last_clouds,
-                                long double 	last_ice,
-                                long double 	last_temp,
-                                long double 	last_albedo)
+    void calculate_surface_temp(PlanetObj 	planet,
+                                boolean				first,
+                                double		last_water,
+                                double 	last_clouds,
+                                double 	last_ice,
+                                double 	last_temp,
+                                double 	last_albedo)
     {
-        long double effective_temp;
-        long double water_raw;
-        long double clouds_raw;
-        long double greenhouse_temp;
-        int			boil_off = FALSE;
+        double effective_temp;
+        double water_raw;
+        double clouds_raw;
+        double greenhouse_temp;
+        boolean			boil_off = false;
 
         if (first)
         {
-            planet->albedo = EARTH_ALBEDO;
+            planet.albedo = Constants.EARTH_ALBEDO;
 
-            effective_temp 		= eff_temp(planet->sun->r_ecosphere, planet->a, planet->albedo);
-            greenhouse_temp     = green_rise(opacity(planet->molec_weight,
-                    planet->surf_pressure),
+            effective_temp 		= eff_temp(planet.sun.r_ecosphere, planet.a, planet.albedo);
+            greenhouse_temp     = green_rise(opacity(planet.molec_weight,
+                    planet.surf_pressure),
                     effective_temp,
-                    planet->surf_pressure);
-            planet->surf_temp   = effective_temp + greenhouse_temp;
+                    planet.surf_pressure);
+            planet.surf_temp   = effective_temp + greenhouse_temp;
 
             set_temp_range(planet);
         }
 
-        if (planet->greenhouse_effect
-                && planet->max_temp < planet->boil_point)
+        if (planet.greenhouse_effect
+                && planet.max_temp < planet.boil_point)
         {
-            if (flag_verbose & 0x0010)
-                fprintf (stderr, "Deluge: %s %d max (%Lf) < boil (%Lf)\n",
-                        planet->sun->name,
-                        planet->planet_no,
-                        planet->max_temp,
-                        planet->boil_point);
+            planet.greenhouse_effect = false;
 
-            planet->greenhouse_effect = 0;
+            planet.volatile_gas_inventory 	= vol_inventory(planet.mass,
+                    planet.esc_velocity,
+                    planet.rms_velocity,
+                    planet.sun.mass,
+                    planet.orbit_zone,
+                    planet.greenhouse_effect,
+                    (planet.gas_mass
+                            / planet.mass) > 0.000001);
+            planet.surf_pressure 			= pressure(planet.volatile_gas_inventory,
+                    planet.radius,
+                    planet.surf_grav);
 
-            planet->volatile_gas_inventory 	= vol_inventory(planet->mass,
-                    planet->esc_velocity,
-                    planet->rms_velocity,
-                    planet->sun->mass,
-                    planet->orbit_zone,
-                    planet->greenhouse_effect,
-                    (planet->gas_mass
-                            / planet->mass) > 0.000001);
-            planet->surf_pressure 			= pressure(planet->volatile_gas_inventory,
-                    planet->radius,
-                    planet->surf_grav);
-
-            planet->boil_point 			= boiling_point(planet->surf_pressure);
+            planet.boil_point 			= boiling_point(planet.surf_pressure);
         }
 
         water_raw     			=
-                planet->hydrosphere		= hydro_fraction(planet->volatile_gas_inventory,
-                        planet->radius);
+                planet.hydrosphere		= hydro_fraction(planet.volatile_gas_inventory,
+                        planet.radius);
         clouds_raw     			=
-                planet->cloud_cover 	= cloud_fraction(planet->surf_temp,
-                        planet->molec_weight,
-                        planet->radius,
-                        planet->hydrosphere);
-        planet->ice_cover   	= ice_fraction(planet->hydrosphere,
-                planet->surf_temp);
+                planet.cloud_cover 	= cloud_fraction(planet.surf_temp,
+                        planet.molec_weight,
+                        planet.radius,
+                        planet.hydrosphere);
+        planet.ice_cover   	= ice_fraction(planet.hydrosphere,
+                planet.surf_temp);
 
-        if ((planet->greenhouse_effect)
-                && (planet->surf_pressure > 0.0))
-            planet->cloud_cover	= 1.0;
+        if ((planet.greenhouse_effect)
+                && (planet.surf_pressure > 0.0))
+            planet.cloud_cover	= 1.0;
 
-        if ((planet->high_temp >= planet->boil_point)
+        if ((planet.high_temp >= planet.boil_point)
                 && (!first)
-                && !((int)planet->day == (int)(planet->orb_period * 24.0) ||
-                (planet->resonant_period)))
+                && !((int)planet.day == (int)(planet.orb_period * 24.0) ||
+                (planet.resonant_period)))
         {
-            planet->hydrosphere	= 0.0;
-            boil_off = TRUE;
+            planet.hydrosphere	= 0.0;
+            boil_off = true;
 
-            if (planet->molec_weight > WATER_VAPOR)
-                planet->cloud_cover = 0.0;
+            if (planet.molec_weight > Constants.WATER_VAPOR)
+                planet.cloud_cover = 0.0;
             else
-                planet->cloud_cover = 1.0;
+                planet.cloud_cover = 1.0;
         }
 
-        if (planet->surf_temp < (FREEZING_POINT_OF_WATER - 3.0))
-            planet->hydrosphere	= 0.0;
+        if (planet.surf_temp < (Constants.FREEZING_POINT_OF_WATER - 3.0))
+            planet.hydrosphere	= 0.0;
 
-        planet->albedo			= planet_albedo(planet->hydrosphere,
-                planet->cloud_cover,
-                planet->ice_cover,
-                planet->surf_pressure);
+        planet.albedo			= planet_albedo(planet.hydrosphere,
+                planet.cloud_cover,
+                planet.ice_cover,
+                planet.surf_pressure);
 
-        effective_temp 			= eff_temp(planet->sun->r_ecosphere, planet->a, planet->albedo);
-        greenhouse_temp     	= green_rise(opacity(planet->molec_weight,
-                planet->surf_pressure),
+        effective_temp 			= eff_temp(planet.sun.r_ecosphere, planet.a, planet.albedo);
+        greenhouse_temp     	= green_rise(opacity(planet.molec_weight,
+                planet.surf_pressure),
                 effective_temp,
-                planet->surf_pressure);
-        planet->surf_temp   	= effective_temp + greenhouse_temp;
+                planet.surf_pressure);
+        planet.surf_temp   	= effective_temp + greenhouse_temp;
 
         if (!first)
         {
             if (!boil_off)
-                planet->hydrosphere	= (planet->hydrosphere + (last_water * 2))  / 3;
-            planet->cloud_cover	    = (planet->cloud_cover + (last_clouds * 2)) / 3;
-            planet->ice_cover	    = (planet->ice_cover   + (last_ice * 2))    / 3;
-            planet->albedo		    = (planet->albedo      + (last_albedo * 2)) / 3;
-            planet->surf_temp	    = (planet->surf_temp   + (last_temp * 2))   / 3;
+                planet.hydrosphere	= (planet.hydrosphere + (last_water * 2))  / 3;
+            planet.cloud_cover	    = (planet.cloud_cover + (last_clouds * 2)) / 3;
+            planet.ice_cover	    = (planet.ice_cover   + (last_ice * 2))    / 3;
+            planet.albedo		    = (planet.albedo      + (last_albedo * 2)) / 3;
+            planet.surf_temp	    = (planet.surf_temp   + (last_temp * 2))   / 3;
         }
 
         set_temp_range(planet);
-
-        if (flag_verbose & 0x0020)
-            fprintf (stderr, "%5.1Lf AU: %5.1Lf = %5.1Lf ef + %5.1Lf gh%c "
-                    "(W: %4.2Lf (%4.2Lf) C: %4.2Lf (%4.2Lf) I: %4.2Lf A: (%4.2Lf))\n",
-                    planet->a,
-                    planet->surf_temp - FREEZING_POINT_OF_WATER,
-                    effective_temp - FREEZING_POINT_OF_WATER,
-                    greenhouse_temp,
-                    (planet->greenhouse_effect) ? '*' :' ',
-                    planet->hydrosphere, water_raw,
-                    planet->cloud_cover, clouds_raw,
-                    planet->ice_cover,
-                    planet->albedo);
     }
 
-    void iterate_surface_temp(planet)
-    planet_pointer planet;
+    void iterate_surface_temp(PlanetObj planet)
     {
         int			count = 0;
-        long double initial_temp = est_temp(planet->sun->r_ecosphere, planet->a, planet->albedo);
+        double initial_temp = est_temp(planet.sun.r_ecosphere, planet.a, planet.albedo);
 
-        long double h2_life  = gas_life (MOL_HYDROGEN,    planet);
-        long double h2o_life = gas_life (WATER_VAPOR,     planet);
-        long double n2_life  = gas_life (MOL_NITROGEN,    planet);
-        long double n_life   = gas_life (ATOMIC_NITROGEN, planet);
+        double h2_life  = gas_life (Constants.MOL_HYDROGEN,    planet);
+        double h2o_life = gas_life (Constants.WATER_VAPOR,     planet);
+        double n2_life  = gas_life (Constants.MOL_NITROGEN,    planet);
+        double n_life   = gas_life (Constants.ATOMIC_NITROGEN, planet);
 
-        if (flag_verbose & 0x20000)
-            fprintf (stderr, "%d:                     %5.1Lf it [%5.1Lf re %5.1Lf a %5.1Lf alb]\n",
-                    planet->planet_no,
-                    initial_temp,
-                    planet->sun->r_ecosphere, planet->a, planet->albedo
-            );
-
-        if (flag_verbose & 0x0040)
-            fprintf (stderr, "\nGas lifetimes: H2 - %Lf, H2O - %Lf, N - %Lf, N2 - %Lf\n",
-                    h2_life, h2o_life, n_life, n2_life);
-
-        calculate_surface_temp(planet, TRUE, 0, 0, 0, 0, 0);
+        calculate_surface_temp(planet, true, 0, 0, 0, 0, 0);
 
         for (count = 0;
              count <= 25;
              count++)
         {
-            long double	last_water	= planet->hydrosphere;
-            long double last_clouds	= planet->cloud_cover;
-            long double last_ice	= planet->ice_cover;
-            long double last_temp	= planet->surf_temp;
-            long double last_albedo	= planet->albedo;
+            double	last_water	= planet.hydrosphere;
+            double last_clouds	= planet.cloud_cover;
+            double last_ice	= planet.ice_cover;
+            double last_temp	= planet.surf_temp;
+            double last_albedo	= planet.albedo;
 
-            calculate_surface_temp(planet, FALSE,
+            calculate_surface_temp(planet, false,
                     last_water, last_clouds, last_ice,
                     last_temp, last_albedo);
 
-            if (fabs(planet->surf_temp - last_temp) < 0.25)
+            if (Math.abs(planet.surf_temp - last_temp) < 0.25)
                 break;
         }
 
-        planet->greenhs_rise = planet->surf_temp - initial_temp;
+        planet.greenhs_rise = planet.surf_temp - initial_temp;
 
-        if (flag_verbose & 0x20000)
-            fprintf (stderr, "%d: %5.1Lf gh = %5.1Lf (%5.1Lf C) st - %5.1Lf it [%5.1Lf re %5.1Lf a %5.1Lf alb]\n",
-                    planet->planet_no,
-                    planet->greenhs_rise,
-                    planet->surf_temp,
-                    planet->surf_temp - FREEZING_POINT_OF_WATER,
-                    initial_temp,
-                    planet->sun->r_ecosphere, planet->a, planet->albedo
-            );
     }
 
 /*--------------------------------------------------------------------------*/
@@ -972,11 +907,11 @@ public class Enviro {
 /*	 air in the nasal passage and throat This formula is on Dole's p. 14	*/
 /*--------------------------------------------------------------------------*/
 
-    long double inspired_partial_pressure (long double surf_pressure,
-                                           long double gas_pressure)
+    double inspired_partial_pressure (double surf_pressure,
+                                           double gas_pressure)
     {
-        long double pH2O = (H20_ASSUMED_PRESSURE);
-        long double fraction = gas_pressure / surf_pressure;
+        double pH2O = (Constants.H20_ASSUMED_PRESSURE);
+        double fraction = gas_pressure / surf_pressure;
 
         return	(surf_pressure - pH2O) * fraction;
     }
@@ -989,77 +924,77 @@ public class Enviro {
 /*   of the planet's atmosphere.                                       JLB  */
 /*--------------------------------------------------------------------------*/
 
-    unsigned int breathability (planet_pointer planet)
+    PlanetObj.breathabilty_type breathability (PlanetObj planet)
     {
-        int	oxygen_ok	= FALSE;
+        boolean	oxygen_ok	= false;
         int index;
 
-        if (planet->gases == 0)
-            return NONE;
+        if (planet.gases == 0)
+            return PlanetObj.breathabilty_type.NONE;
 
-        for (index = 0; index < planet->gases; index++)
+        for (index = 0; index < planet.gases; index++)
         {
             int	n;
             int	gas_no = 0;
 
-            long double ipp = inspired_partial_pressure (planet->surf_pressure,
-                planet->atmosphere[index].surf_pressure);
+            double ipp = inspired_partial_pressure (planet.surf_pressure,
+                planet.atmosphere.get(index).surf_pressure);
 
-            for (n = 0; n < max_gas; n++)
+            for (n = 0; n < StarGen.gases.length; n++)
             {
-                if (gases[n].num == planet->atmosphere[index].num)
+                if (StarGen.gases[n].num == planet.atmosphere.get(index).num)
                     gas_no = n;
             }
 
-            if (ipp > gases[gas_no].max_ipp)
-                return POISONOUS;
+            if (ipp > StarGen.gases[gas_no].max_ipp)
+                return PlanetObj.breathabilty_type.POISONOUS;
 
-            if (planet->atmosphere[index].num == AN_O)
-                oxygen_ok = ((ipp >= MIN_O2_IPP) && (ipp <= MAX_O2_IPP));
+            if (planet.atmosphere.get(index).num == Constants.AN_O)
+                oxygen_ok = ((ipp >= Constants.MIN_O2_IPP) && (ipp <= Constants.MAX_O2_IPP));
         }
 
         if (oxygen_ok)
-            return BREATHABLE;
+            return PlanetObj.breathabilty_type.BREATHABLE;
         else
-            return UNBREATHABLE;
+            return PlanetObj.breathabilty_type.UNBREATHABLE;
     }
 
 /* function for 'soft limiting' temperatures */
 
-    long double lim(long double x)
+    double lim(double x)
     {
-        return x / sqrt(sqrt(1 + x*x*x*x));
+        return x / Math.sqrt(Math.sqrt(1 + x*x*x*x));
     }
 
-    long double soft(long double v, long double max, long double min)
+    double soft(double v, double max, double min)
     {
-        long double dv = v - min;
-        long double dm = max - min;
+        double dv = v - min;
+        double dm = max - min;
         return (lim(2*dv/dm-1)+1)/2 * dm + min;
     }
 
-    void set_temp_range(planet_pointer planet)
+    void set_temp_range(PlanetObj planet)
     {
-        long double pressmod = 1 / sqrt(1 + 20 * planet->surf_pressure/1000.0);
-        long double ppmod    = 1 / sqrt(10 + 5 * planet->surf_pressure/1000.0);
-        long double tiltmod  = fabs(cos(planet->axial_tilt * PI/180) * pow(1 + planet->e, 2));
-        long double daymod   = 1 / (200/planet->day + 1);
-        long double mh = pow(1 + daymod, pressmod);
-        long double ml = pow(1 - daymod, pressmod);
-        long double hi = mh * planet->surf_temp;
-        long double lo = ml * planet->surf_temp;
-        long double sh = hi + pow((100+hi) * tiltmod, sqrt(ppmod));
-        long double wl = lo - pow((150+lo) * tiltmod, sqrt(ppmod));
-        long double max = planet->surf_temp + sqrt(planet->surf_temp) * 10;
-        long double min = planet->surf_temp / sqrt(planet->day + 24);
+        double pressmod = 1 / Math.sqrt(1 + 20 * planet.surf_pressure/1000.0);
+        double ppmod    = 1 /  Math.sqrt(10 + 5 * planet.surf_pressure/1000.0);
+        double tiltmod  =  Math.abs( Math.cos(planet.axial_tilt * Math.PI/180) * Math.pow(1 + planet.e, 2));
+        double daymod   = 1 / (200/planet.day + 1);
+        double mh = Math.pow(1 + daymod, pressmod);
+        double ml = Math.pow(1 - daymod, pressmod);
+        double hi = mh * planet.surf_temp;
+        double lo = ml * planet.surf_temp;
+        double sh = hi + Math.pow((100+hi) * tiltmod,  Math.sqrt(ppmod));
+        double wl = lo - Math.pow((150+lo) * tiltmod,  Math.sqrt(ppmod));
+        double max = planet.surf_temp +  Math.sqrt(planet.surf_temp) * 10;
+        double min = planet.surf_temp /  Math.sqrt(planet.day + 24);
 
         if (lo < min) lo = min;
         if (wl < 0)   wl = 0;
 
-        planet->high_temp = soft(hi, max, min);
-        planet->low_temp  = soft(lo, max, min);
-        planet->max_temp  = soft(sh, max, min);
-        planet->min_temp  = soft(wl, max, min);
+        planet.high_temp = soft(hi, max, min);
+        planet.low_temp  = soft(lo, max, min);
+        planet.max_temp  = soft(sh, max, min);
+        planet.min_temp  = soft(wl, max, min);
     }
 
 

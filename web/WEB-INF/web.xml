@@ -7,10 +7,19 @@
         <servlet-name>Status</servlet-name>
         <servlet-class>com.eweware.phabrik.rest.StatusREST</servlet-class>
     </servlet>
-    
-    
+    <servlet>
+        <servlet-name>GenerateREST</servlet-name>
+        <servlet-class>com.eweware.phabrik.rest.GenerateREST</servlet-class>
+    </servlet>
+
+
     <servlet-mapping>
         <servlet-name>Status</servlet-name>
-        <url-pattern>test</url-pattern>
+        <url-pattern>api/v1/status</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>GenerateREST</servlet-name>
+        <url-pattern>api/v1/generate</url-pattern>
     </servlet-mapping>
 </web-app>

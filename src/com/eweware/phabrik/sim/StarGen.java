@@ -1,20 +1,19 @@
 package com.eweware.phabrik.sim;
 
-import java.util.Random;
+import java.util.*;
+
+import com.eweware.phabrik.obj.PlanetObj;
+import com.eweware.phabrik.obj.SunObj;
 
 /**
  * Created by Dave on 9/2/2016.
  */
 public class StarGen {
 
-    static int 		    total_earthlike;
-    static int 		    total_habitable;
-
-    String	stargen_revision = "$Revision: 1.43 $";
 
     /*  These are the global variables used during accretion:  */
-    planet_pointer	innermost_planet;
-    double		dust_density_coeff = DUST_DENSITY_COEFF;
+    PlanetObj innermost_planet;
+    double dust_density_coeff = Constants.DUST_DENSITY_COEFF;
 
 
     int flag_verbose = 0;
@@ -22,1725 +21,823 @@ public class StarGen {
     // 0x0002			Trace Min/max
     // 0x0004			List habitable
     // 0x0008			List Earth-like (and Sphinx-line)
-    
+
     // 0x0010			List Gases
     // 0x0020			Trace temp iterations
     // 0x0040			Gas lifetimes
     // 0x0080			List loss of accreted gas mass
-    
+
     // 0x0100			Injecting, collision
     // 0x0200			Checking..., Failed...
     // 0x0400			List binary info
     // 0x0800			List Gas Dwarfs etc.
-    
+
     // 0x1000			Moons
     // 0x2000			Oxygen poisoned
     // 0x4000			Trace gas %ages (whoops)
     // 0x8000			Jovians in habitable zone
-    
+
     // 0x10000			List type diversity
     // 0x20000			Trace Surface temp interations
     // 0x40000			Lunar orbits
 
-    long flag_seed		 = 0;
+    long flag_seed = 0;
 
-    int earthlike		 = 0;
-    int total_earthlike	 = 0;
-    int habitable		 = 0;
-    int habitable_jovians= 0;
-    int total_habitable	 = 0;
+    int earthlike = 0;
+    int total_earthlike = 0;
+    int habitable = 0;
+    int habitable_jovians = 0;
+    int total_habitable = 0;
 
-    double	min_breathable_terrestrial_g = 1000.0;
-    double	min_breathable_g			 = 1000.0;
-    double	max_breathable_terrestrial_g = 0.0;
-    double	max_breathable_g			 = 0.0;
-    double	min_breathable_temp			 = 1000.0;
-    double	max_breathable_temp			 = 0.0;
-    double	min_breathable_p			 = 100000.0;
-    double	max_breathable_p			 = 0.0;
-    double	min_breathable_terrestrial_l = 1000.0;
-    double	min_breathable_l			 = 1000.0;
-    double	max_breathable_terrestrial_l = 0.0;
-    double	max_breathable_l			 = 0.0;
-    double max_moon_mass				 = 0.0;
+    double min_breathable_terrestrial_g = 1000.0;
+    double min_breathable_g = 1000.0;
+    double max_breathable_terrestrial_g = 0.0;
+    double max_breathable_g = 0.0;
+    double min_breathable_temp = 1000.0;
+    double max_breathable_temp = 0.0;
+    double min_breathable_p = 100000.0;
+    double max_breathable_p = 0.0;
+    double min_breathable_terrestrial_l = 1000.0;
+    double min_breathable_l = 1000.0;
+    double max_breathable_terrestrial_l = 0.0;
+    double max_breathable_l = 0.0;
+    double max_moon_mass = 0.0;
 
 
-    int type_counts[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
-    int	type_count = 0;
+    int type_counts[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    int type_count = 0;
     int max_type_count = 0;
 
-    double EM(double X) {
+    static double EM(double x) {
         return x / Constants.SUN_MASS_IN_EARTH_MASSES;
     }
 
-    double AVE(double x, double y) {
-        return ((x + y)/2);
+    static double AVE(double x, double y) {
+        return ((x + y) / 2);
     }
 
 
+    /*	No Orbit Eccen. Tilt   Mass    Gas Giant? Dust Mass   Gas */
+    public static PlanetObj smallest = new PlanetObj(0, 0.0, 0.0, 20.0, EM(0.4), false, EM(0.4), 0.0);
+    public static PlanetObj average = new PlanetObj(0, 0.0, 0.0, 20.0, EM(1.0), false, EM(1.0), 0.0);
+    public static PlanetObj largest = new PlanetObj(0, 0.0, 0.0, 20.0, EM(1.6), false, EM(1.6), 0.0);
 
 
-			/*	No Orbit Eccen. Tilt   Mass    Gas Giant? Dust Mass   Gas */
-        planets	smallest={0, 0.0, 0.0,	20.0,	EM(0.4),   FALSE,  EM(0.4),   0.0, ZEROES,0,NULL, NULL};
-        planets	average	={0, 0.0, 0.0,	20.0,	EM(1.0),   FALSE,  EM(1.0),    0.0, ZEROES,0,NULL, NULL};
-        planets	largest	={0, 0.0, 0.0,	20.0,	EM(1.6),   FALSE,  EM(1.6),   0.0, ZEROES,0,NULL, NULL};
- 
+    public static ChemTable gases[] =
+            {
+                    //   An   sym   HTML symbol                      name                 Aw      melt    boil    dens       ABUNDe       ABUNDs         Rea	Max inspired pp
+                    new ChemTable(Constants.AN_H, "H", "Hydrogen", 1.0079, 14.06, 20.40, 8.99e-05, 0.00125893, 27925.4, 1, 0.0),
+                    new ChemTable(Constants.AN_HE, "He", "Helium", 4.0026, 3.46, 4.20, 0.0001787, 7.94328e-09, 2722.7, 0, Constants.MAX_HE_IPP),
+                    new ChemTable(Constants.AN_N, "N", "Nitrogen", 14.0067, 63.34, 77.40, 0.0012506, 1.99526e-05, 3.13329, 0, Constants.MAX_N2_IPP),
+                    new ChemTable(Constants.AN_O, "O", "Oxygen", 15.9994, 54.80, 90.20, 0.001429, 0.501187, 23.8232, 10, Constants.MAX_O2_IPP),
+                    new ChemTable(Constants.AN_NE, "Ne", "Neon", 20.1700, 24.53, 27.10, 0.0009, 5.01187e-09, 3.4435e-5, 0, Constants.MAX_NE_IPP),
+                    new ChemTable(Constants.AN_AR, "Ar", "Argon", 39.9480, 84.00, 87.30, 0.0017824, 3.16228e-06, 0.100925, 0, Constants.MAX_AR_IPP),
+                    new ChemTable(Constants.AN_KR, "Kr", "Krypton", 83.8000, 116.60, 119.70, 0.003708, 1e-10, 4.4978e-05, 0, Constants.MAX_KR_IPP),
+                    new ChemTable(Constants.AN_XE, "Xe", "Xenon", 131.3000, 161.30, 165.00, 0.00588, 3.16228e-11, 4.69894e-06, 0, Constants.MAX_XE_IPP),
+                    //                                                                     from here down, these columns were originally: 0.001,         0
+                    new ChemTable(Constants.AN_NH3, "NH3", "Ammonia", 17.0000, 195.46, 239.66, 0.001, 0.002, 0.0001, 1, Constants.MAX_NH3_IPP),
+                    new ChemTable(Constants.AN_H2O, "H2O", "Water", 18.0000, 273.16, 373.16, 1.000, 0.03, 0.001, 0, 0.0),
+                    new ChemTable(Constants.AN_CO2, "CO2", "CarbonDioxide", 44.0000, 194.66, 194.66, 0.001, 0.01, 0.0005, 0, Constants.MAX_CO2_IPP),
+                    new ChemTable(Constants.AN_O3, "O3", "Ozone", 48.0000, 80.16, 161.16, 0.001, 0.001, 0.000001, 2, Constants.MAX_O3_IPP),
+                    new ChemTable(Constants.AN_CH4, "CH4", "Methane", 16.0000, 90.16, 109.16, 0.010, 0.005, 0.0001, 1, Constants.MAX_CH4_IPP),
+                    new ChemTable(0, "", "", 0, 0, 0, 0, 0, 0, 0, 0)
+            };
 
 
-        ChemTable    gases[] =
-        {
-//   An   sym   HTML symbol                      name                 Aw      melt    boil    dens       ABUNDe       ABUNDs         Rea	Max inspired pp
-        {AN_H,  "H",  "H<SUB><SMALL>2</SMALL></SUB>",	 "Hydrogen",         1.0079,  14.06,  20.40,  8.99e-05,  0.00125893,  27925.4,       1,		0.0},
-        {AN_HE, "He", "He",							 "Helium",           4.0026,   3.46,   4.20,  0.0001787, 7.94328e-09, 2722.7,        0,		MAX_HE_IPP},
-        {AN_N,  "N",  "N<SUB><SMALL>2</SMALL></SUB>",	 "Nitrogen",        14.0067,  63.34,  77.40,  0.0012506, 1.99526e-05, 3.13329,       0,		MAX_N2_IPP},
-        {AN_O,  "O",  "O<SUB><SMALL>2</SMALL></SUB>",	 "Oxygen",          15.9994,  54.80,  90.20,  0.001429,  0.501187,    23.8232,       10,	MAX_O2_IPP},
-        {AN_NE, "Ne", "Ne",							 "Neon",            20.1700,  24.53,  27.10,  0.0009,    5.01187e-09, 3.4435e-5,     0,		MAX_NE_IPP},
-        {AN_AR, "Ar", "Ar",							 "Argon",           39.9480,  84.00,  87.30,  0.0017824, 3.16228e-06, 0.100925,      0,		MAX_AR_IPP},
-        {AN_KR, "Kr", "Kr",							 "Krypton",         83.8000, 116.60, 119.70,  0.003708,  1e-10,       4.4978e-05,    0,		MAX_KR_IPP},
-        {AN_XE, "Xe", "Xe",							 "Xenon",          131.3000, 161.30, 165.00,  0.00588,   3.16228e-11, 4.69894e-06,   0,		MAX_XE_IPP},
-//                                                                     from here down, these columns were originally: 0.001,         0
-        {AN_NH3, "NH3", "NH<SUB><SMALL>3</SMALL></SUB>", "Ammonia",       17.0000, 195.46, 239.66,  0.001,     0.002,       0.0001,        1,		MAX_NH3_IPP},
-        {AN_H2O, "H2O", "H<SUB><SMALL>2</SMALL></SUB>O", "Water",         18.0000, 273.16, 373.16,  1.000,     0.03,        0.001,         0,		0.0},
-        {AN_CO2, "CO2", "CO<SUB><SMALL>2</SMALL></SUB>", "CarbonDioxide", 44.0000, 194.66, 194.66,  0.001,     0.01,        0.0005,        0,		MAX_CO2_IPP},
-        {AN_O3,   "O3", "O<SUB><SMALL>3</SMALL></SUB>",  "Ozone",         48.0000,  80.16, 161.16,  0.001,     0.001,       0.000001,      2,		MAX_O3_IPP},
-        {AN_CH4, "CH4", "CH<SUB><SMALL>4</SMALL></SUB>", "Methane",       16.0000,  90.16, 109.16,  0.010,     0.005,       0.0001,        1,		MAX_CH4_IPP},
-        { 0, "", "", 0, 0, 0, 0, 0, 0, 0, 0, 0}
-        };
+    int max_gas = gases.length;
+    Random theRnd = new Random();
+    Accrete accrete = new Accrete();
+    Enviro enviro = new Enviro();
 
 
-        int max_gas = (sizeof(gases)/sizeof(ChemTable))-1;
-
-
-
-        void init()
-        {
-        if (!flag_seed)
-        {
-        time_t		temp_time;
-        unsigned	seed = (unsigned)(time(&temp_time));
-
-        (void)srand(seed);
-
-        flag_seed = rand();
+    void init() {
+        if (flag_seed == 0) {
+            flag_seed = System.nanoTime();
         }
 
-        (void)srand(flag_seed);
-        }
+        theRnd.setSeed(flag_seed);
 
-        void generate_stellar_system(sun*			sun,
-        int 			use_seed_system,
-        planet_pointer seed_system,
-        char			flag_char,
-        int			sys_no,
-        char*			system_name,
-        double 	outer_planet_limit,
-        int			do_gases,
-        int			do_moons)
-        {
-        double		outer_dust_limit;
+    }
 
-        if ((sun->mass < 0.2) || (sun->mass > 1.5))
-        sun->mass		 = random_number(0.7,1.4);
+    SunObj generate_stellar_system(SunObj sun,
+                                   PlanetObj seed_system,
+                                   String system_name,
+                                   double outer_planet_limit,
+                                   boolean do_gases,
+                                   boolean do_moons) {
+        double outer_dust_limit;
 
-        outer_dust_limit	 = stellar_dust_limit(sun->mass);
+        if ((sun.mass < 0.2) || (sun.mass > 1.5))
+            sun.mass = Utils.random_number(0.7, 1.4);
 
-        if (sun->luminosity == 0)
-        sun->luminosity	 = luminosity(sun->mass);
+        outer_dust_limit = accrete.stellar_dust_limit(sun.mass);
 
-        sun->r_ecosphere	 = sqrt(sun->luminosity);
-        sun->life			 = 1.0E10 * (sun->mass / sun->luminosity);
+        if (sun.luminosity == 0)
+            sun.luminosity = enviro.luminosity(sun.mass);
 
-        if (use_seed_system)
-        {
-        innermost_planet = seed_system;
-        sun->age = 5.0E9;
-        }
-        else
-        {
+        sun.r_ecosphere = Math.sqrt(sun.luminosity);
+        sun.life = 1.0E10 * (sun.mass / sun.luminosity);
+
+
         double min_age = 1.0E9;
         double max_age = 6.0E9;
 
-        if (sun->life < max_age)
-        max_age = sun->life;
+        if (sun.life < max_age)
+            max_age = sun.life;
 
-        innermost_planet = dist_planetary_masses(sun->mass,
-        sun->luminosity,
-        0.0,outer_dust_limit,
-        outer_planet_limit,
-        dust_density_coeff,
-        seed_system,
-        do_moons);
+        innermost_planet = accrete.dist_planetary_masses(sun.mass,
+                sun.luminosity,
+                0.0, outer_dust_limit,
+                outer_planet_limit,
+                dust_density_coeff,
+                seed_system,
+                do_moons);
 
-        sun->age = random_number(min_age, max_age);
-        }
+        sun.age = Utils.random_number(min_age, max_age);
+
 
         generate_planets(sun,
-        !use_seed_system,
-        flag_char,
-        sys_no,
-        system_name,
-        do_gases,
-        do_moons);
+                system_name,
+                do_gases,
+                do_moons);
+
+        return sun;
+    }
+
+    void calculate_gases(SunObj sun, PlanetObj planet, String planet_id) {
+        if (planet.surf_pressure > 0) {
+            double[] amount = new double[max_gas + 1];
+            double totamount = 0;
+            double pressure = planet.surf_pressure / Constants.MILLIBARS_PER_BAR;
+            int n = 0;
+            int i;
+
+            for (i = 0; i < max_gas; i++) {
+                double yp = gases[i].boil /
+                        (373. * ((Math.log((pressure) + 0.001) / -5050.5) +
+                                (1.0 / 373.)));
+
+                if ((yp >= 0 && yp < planet.low_temp)
+                        && (gases[i].weight >= planet.molec_weight)) {
+                    double vrms = enviro.rms_vel(gases[i].weight, planet.exospheric_temp);
+                    double pvrms = Math.pow(1 / (1 + vrms / planet.esc_velocity), sun.age / 1e9);
+                    double abund = gases[i].abunds; 				/* gases[i].abunde */
+                    double react = 1.0;
+                    double fract = 1.0;
+                    double pres2 = 1.0;
+
+                    if (gases[i].symbol.compareTo("Ar") == 0) {
+                        react = .15 * sun.age / 4e9;
+                    } else if (gases[i].symbol.compareTo("He") == 0) {
+                        abund = abund * (0.001 + (planet.gas_mass / planet.mass));
+                        pres2 = (0.75 + pressure);
+                        react = Math.pow(1 / (1 + gases[i].reactivity),
+                                sun.age / 2e9 * pres2);
+                    } else if ((gases[i].symbol.compareTo("O") == 0 ||
+                            gases[i].symbol.compareTo("O2") == 0) &&
+                            sun.age > 2e9 &&
+                            planet.surf_temp > 270 && planet.surf_temp < 400) {
+                /*	pres2 = (0.65 + pressure/2);			Breathable - M: .55-1.4 	*/
+                        pres2 = (0.89 + pressure / 4);		/*	Breathable - M: .6 -1.8 	*/
+                        react = Math.pow(1 / (1 + gases[i].reactivity),
+                                Math.pow(sun.age / 2e9, 0.25) * pres2);
+                    } else if (gases[i].symbol.compareTo("CO2") == 0 &&
+                            sun.age > 2e9 &&
+                            planet.surf_temp > 270 && planet.surf_temp < 400) {
+                        pres2 = (0.75 + pressure);
+                        react = Math.pow(1 / (1 + gases[i].reactivity),
+                                Math.pow(sun.age / 2e9, 0.5) * pres2);
+                        react *= 1.5;
+                    } else {
+                        pres2 = (0.75 + pressure);
+                        react = Math.pow(1 / (1 + gases[i].reactivity),
+                                sun.age / 2e9 * pres2);
+                    }
+
+                    fract = (1 - (planet.molec_weight / gases[i].weight));
+
+                    amount[i] = abund * pvrms * react * fract;
+
+                    totamount += amount[i];
+                    if (amount[i] > 0.0)
+                        n++;
+                } else
+                    amount[i] = 0.0;
+            }
+
+            if (n > 0) {
+                planet.gases = n;
+                planet.atmosphere = new ArrayList<Gas>();
+
+                for (i = 0, n = 0; i < max_gas; i++) {
+                    if (amount[i] > 0.0) {
+                        Gas newGas = new Gas();
+                        newGas.num = gases[i].num;
+                        newGas.surf_pressure = planet.surf_pressure * amount[i] / totamount;
+                        planet.atmosphere.add(newGas);
+
+
+                        n++;
+                    }
+                }
+
+                Collections.sort(planet.atmosphere, new Comparator<Gas>() {
+                    @Override
+                    public int compare(Gas o1, Gas o2) {
+                        return diminishing_pressure(o1, o2);
+                    }
+                });
+
+
+            }
+
         }
+    }
 
-        void calculate_gases(sun*			sun,
-        planet_pointer	planet,
-        char*			planet_id)
-        {
-        if (planet->surf_pressure > 0)
-        {
-        double	*amount = (double*)calloc((max_gas+1), sizeof(double));
-        double	totamount = 0;
-        double pressure  = planet->surf_pressure/MILLIBARS_PER_BAR;
-        int			n         = 0;
-        int			i;
+    void generate_planet(PlanetObj planet,
+                         int planet_no,
+                         SunObj sun,
+                         String planet_id,
+                         boolean do_gases,
+                         boolean do_moons,
+                         boolean is_moon) {
+        planet.atmosphere = null;
+        planet.gases = 0;
+        planet.surf_temp = 0;
+        planet.high_temp = 0;
+        planet.low_temp = 0;
+        planet.max_temp = 0;
+        planet.min_temp = 0;
+        planet.greenhs_rise = 0;
+        planet.planet_no = planet_no;
+        planet.sun = sun;
+        planet.resonant_period = false;
 
-        for (i = 0; i < max_gas; i++)
-        {
-        double yp = gases[i].boil /
-        (373. * ((log((pressure) + 0.001) / -5050.5) +
-        (1.0 / 373.)));
+        planet.orbit_zone = enviro.orb_zone(sun.luminosity, planet.a);
 
-        if ((yp >= 0 && yp < planet->low_temp)
-        && (gases[i].weight >= planet->molec_weight))
-        {
-        double	vrms	= rms_vel(gases[i].weight, planet->exospheric_temp);
-        double	pvrms	= pow(1 / (1 + vrms / planet->esc_velocity), sun->age / 1e9);
-        double	abund	= gases[i].abunds; 				/* gases[i].abunde */
-        double react	= 1.0;
-        double fract	= 1.0;
-        double pres2	= 1.0;
+        planet.orb_period = enviro.period(planet.a, planet.mass, sun.mass);
+        planet.axial_tilt = enviro.inclination(planet.a);
 
-        if (strcmp(gases[i].symbol, "Ar") == 0)
-        {
-        react = .15 * sun->age/4e9;
-        }
-        else if (strcmp(gases[i].symbol, "He") == 0)
-        {
-        abund = abund * (0.001 + (planet->gas_mass / planet->mass));
-        pres2 = (0.75 + pressure);
-        react = pow(1 / (1 + gases[i].reactivity),
-        sun->age/2e9 * pres2);
-        }
-        else if ((strcmp(gases[i].symbol, "O") == 0 ||
-        strcmp(gases[i].symbol, "O2") == 0) &&
-        sun->age > 2e9 &&
-        planet->surf_temp > 270 && planet->surf_temp < 400)
-        {
-				/*	pres2 = (0.65 + pressure/2);			Breathable - M: .55-1.4 	*/
-        pres2 = (0.89 + pressure/4);		/*	Breathable - M: .6 -1.8 	*/
-        react = pow(1 / (1 + gases[i].reactivity),
-        pow(sun->age/2e9, 0.25) * pres2);
-        }
-        else if (strcmp(gases[i].symbol, "CO2") == 0 &&
-        sun->age > 2e9 &&
-        planet->surf_temp > 270 && planet->surf_temp < 400)
-        {
-        pres2 = (0.75 + pressure);
-        react = pow(1 / (1 + gases[i].reactivity),
-        pow(sun->age/2e9, 0.5) * pres2);
-        react *= 1.5;
-        }
-        else
-        {
-        pres2 = (0.75 + pressure);
-        react = pow(1 / (1 + gases[i].reactivity),
-        sun->age/2e9 * pres2);
-        }
-
-        fract = (1 - (planet->molec_weight / gases[i].weight));
-
-        amount[i] = abund * pvrms * react * fract;
-
-        if ((flag_verbose & 0x4000) &&
-        (strcmp(gases[i].symbol, "O") == 0 ||
-        strcmp(gases[i].symbol, "N") == 0 ||
-        strcmp(gases[i].symbol, "Ar") == 0 ||
-        strcmp(gases[i].symbol, "He") == 0 ||
-        strcmp(gases[i].symbol, "CO2") == 0))
-        {
-        fprintf (stderr, "%-5.2Lf %-3.3s, %-5.2Lf = a %-5.2Lf * p %-5.2Lf * r %-5.2Lf * p2 %-5.2Lf * f %-5.2Lf\t(%.3Lf%%)\n",
-        planet->mass * SUN_MASS_IN_EARTH_MASSES,
-        gases[i].symbol,
-        amount[i],
-        abund,
-        pvrms,
-        react,
-        pres2,
-        fract,
-        100.0 * (planet->gas_mass / planet->mass)
-        );
-        }
-
-        totamount += amount[i];
-        if (amount[i] > 0.0)
-        n++;
-        }
-        else
-        amount[i] = 0.0;
-        }
-
-        if (n > 0)
-        {
-        planet->gases = n;
-        planet->atmosphere = (gas*)calloc(n, sizeof(gas));
-
-        for (i = 0, n = 0; i < max_gas; i++)
-        {
-        if (amount[i] > 0.0)
-        {
-        planet->atmosphere[n].num = gases[i].num;
-        planet->atmosphere[n].surf_pressure = planet->surf_pressure
-        * amount[i] / totamount;
-
-        if (flag_verbose & 0x2000)
-        {
-        if ((planet->atmosphere[n].num == AN_O) &&
-        inspired_partial_pressure (planet->surf_pressure,
-        planet->atmosphere[n].surf_pressure)
-        > gases[i].max_ipp)
-        {
-        fprintf (stderr, "%s\t Poisoned by O2\n",
-        planet_id);
-        }
-        }
-
-        n++;
-        }
-        }
-
-        qsort(planet->atmosphere,
-        planet->gases,
-        sizeof(gas),
-        diminishing_pressure);
-
-        if (flag_verbose & 0x0010)
-        {
-        fprintf (stderr, "\n%s (%5.1Lf AU) gases:\n",
-        planet_id, planet->a);
-
-        for (i = 0; i < planet->gases; i++)
-        {
-        fprintf (stderr, "%3d: %6.1Lf, %11.7Lf%%\n",
-        planet->atmosphere[i].num,
-        planet->atmosphere[i].surf_pressure,
-        100. * (planet->atmosphere[i].surf_pressure /
-        planet->surf_pressure)
-        );
-        }
-        }
-        }
-
-        free(amount);
-        }
-        }
-
-        void generate_planet(planet_pointer	planet,
-        int			planet_no,
-        sun*			sun,
-        int 			random_tilt,
-        char*			planet_id,
-        int			do_gases,
-        int			do_moons,
-        int			is_moon)
-        {
-        planet->atmosphere		= NULL;
-        planet->gases			= 0;
-        planet->surf_temp		= 0;
-        planet->high_temp		= 0;
-        planet->low_temp		= 0;
-        planet->max_temp		= 0;
-        planet->min_temp		= 0;
-        planet->greenhs_rise	= 0;
-        planet->planet_no		= planet_no;
-        planet->sun				= sun;
-        planet->resonant_period = FALSE;
-
-        planet->orbit_zone 		= orb_zone(sun->luminosity, planet->a);
-
-        planet->orb_period		= period(planet->a,planet->mass,sun->mass);
-        if (random_tilt)
-        planet->axial_tilt 	= inclination(planet->a);
-        planet->exospheric_temp = EARTH_EXOSPHERE_TEMP / pow2(planet->a / sun->r_ecosphere);
-        planet->rms_velocity 	= rms_vel(MOL_NITROGEN,planet->exospheric_temp);
-        planet->core_radius 	= kothari_radius(planet->dust_mass,FALSE,planet->orbit_zone);
+        planet.exospheric_temp = Constants.EARTH_EXOSPHERE_TEMP / Utils.pow2(planet.a / sun.r_ecosphere);
+        planet.rms_velocity = enviro.rms_vel(Constants.MOL_NITROGEN, planet.exospheric_temp);
+        planet.core_radius = enviro.kothari_radius(planet.dust_mass, false, planet.orbit_zone);
 
         // Calculate the radius as a gas giant, to verify it will retain gas.
         // Then if mass > Earth, it's at least 5% gas and retains He, it's
         // some flavor of gas giant.
 
-        planet->density 		= empirical_density(planet->mass,planet->a, sun->r_ecosphere, TRUE);
-        planet->radius 			= volume_radius(planet->mass,planet->density);
+        planet.density = enviro.empirical_density(planet.mass, planet.a, sun.r_ecosphere, true);
+        planet.radius = enviro.volume_radius(planet.mass, planet.density);
 
-        planet->surf_accel   	= acceleration(planet->mass,planet->radius);
-        planet->surf_grav 	 	= gravity(planet->surf_accel);
+        planet.surf_accel = enviro.acceleration(planet.mass, planet.radius);
+        planet.surf_grav = enviro.gravity(planet.surf_accel);
 
-        planet->molec_weight	= min_molec_weight(planet);
+        planet.molec_weight = enviro.min_molec_weight(planet);
 
-        if (((planet->mass * SUN_MASS_IN_EARTH_MASSES) > 1.0)
-        && ((planet->gas_mass / planet->mass)        > 0.05)
-        && (min_molec_weight(planet)				  <= 4.0))
-        {
-        if ((planet->gas_mass / planet->mass) < 0.20)
-        planet->type = tSubSubGasGiant;
-        else if ((planet->mass * SUN_MASS_IN_EARTH_MASSES) < 20.0)
-        planet->type = tSubGasGiant;
-        else
-        planet->type = tGasGiant;
-        }
-        else // If not, it's rocky.
-        {
-        planet->radius 		= kothari_radius(planet->mass,FALSE,planet->orbit_zone);
-        planet->density 	= volume_density(planet->mass,planet->radius);
+        if (((planet.mass * Constants.SUN_MASS_IN_EARTH_MASSES) > 1.0)
+                && ((planet.gas_mass / planet.mass) > 0.05)
+                && (enviro.min_molec_weight(planet) <= 4.0)) {
+            if ((planet.gas_mass / planet.mass) < 0.20)
+                planet.planetType = PlanetObj.planet_type.tSubSubGasGiant;
+            else if ((planet.mass * Constants.SUN_MASS_IN_EARTH_MASSES) < 20.0)
+                planet.planetType = PlanetObj.planet_type.tSubGasGiant;
+            else
+                planet.planetType = PlanetObj.planet_type.tGasGiant;
+        } else { // If not, it's rocky.
+            planet.radius = enviro.kothari_radius(planet.mass, false, planet.orbit_zone);
+            planet.density = enviro.volume_density(planet.mass, planet.radius);
 
-        planet->surf_accel  = acceleration(planet->mass,planet->radius);
-        planet->surf_grav 	= gravity(planet->surf_accel);
+            planet.surf_accel = enviro.acceleration(planet.mass, planet.radius);
+            planet.surf_grav = enviro.gravity(planet.surf_accel);
 
-        if ((planet->gas_mass / planet->mass)        > 0.000001)
-        {
-        double h2_mass = planet->gas_mass * 0.85;
-        double he_mass = (planet->gas_mass - h2_mass) * 0.999;
+            if ((planet.gas_mass / planet.mass) > 0.000001) {
+                double h2_mass = planet.gas_mass * 0.85;
+                double he_mass = (planet.gas_mass - h2_mass) * 0.999;
 
-        double h2_loss = 0.0;
-        double he_loss = 0.0;
+                double h2_loss = 0.0;
+                double he_loss = 0.0;
 
 
-        double h2_life = gas_life(MOL_HYDROGEN, planet);
-        double he_life = gas_life(HELIUM, planet);
+                double h2_life = enviro.gas_life(Constants.MOL_HYDROGEN, planet);
+                double he_life = enviro.gas_life(Constants.HELIUM, planet);
 
-        if (h2_life < sun->age)
-        {
-        h2_loss = ((1.0 - (1.0 / exp(sun->age / h2_life))) * h2_mass);
+                if (h2_life < sun.age) {
+                    h2_loss = ((1.0 - (1.0 / Math.exp(sun.age / h2_life))) * h2_mass);
 
-        planet->gas_mass -= h2_loss;
-        planet->mass     -= h2_loss;
+                    planet.gas_mass -= h2_loss;
+                    planet.mass -= h2_loss;
 
-        planet->surf_accel  = acceleration(planet->mass,planet->radius);
-        planet->surf_grav 	= gravity(planet->surf_accel);
-        }
+                    planet.surf_accel = enviro.acceleration(planet.mass, planet.radius);
+                    planet.surf_grav = enviro.gravity(planet.surf_accel);
+                }
 
-        if (he_life < sun->age)
-        {
-        he_loss = ((1.0 - (1.0 / exp(sun->age / he_life))) * he_mass);
+                if (he_life < sun.age) {
+                    he_loss = ((1.0 - (1.0 / Math.exp(sun.age / he_life))) * he_mass);
 
-        planet->gas_mass -= he_loss;
-        planet->mass     -= he_loss;
+                    planet.gas_mass -= he_loss;
+                    planet.mass -= he_loss;
 
-        planet->surf_accel  = acceleration(planet->mass,planet->radius);
-        planet->surf_grav 	= gravity(planet->surf_accel);
+                    planet.surf_accel = enviro.acceleration(planet.mass, planet.radius);
+                    planet.surf_grav = enviro.gravity(planet.surf_accel);
+                }
+            }
         }
 
-        if (((h2_loss + he_loss) > .000001) && (flag_verbose & 0x0080))
-        fprintf (stderr, "%s\tLosing gas: H2: %5.3Lf EM, He: %5.3Lf EM\n",
-        planet_id,
-        h2_loss * SUN_MASS_IN_EARTH_MASSES, he_loss * SUN_MASS_IN_EARTH_MASSES);
-        }
-        }
 
-        planet->day = day_length(planet);	/* Modifies planet->resonant_period */
-        planet->esc_velocity 	= escape_vel(planet->mass,planet->radius);
+        planet.day = enviro.day_length(planet);	/* Modifies planet.resonant_period */
+        planet.esc_velocity = enviro.escape_vel(planet.mass, planet.radius);
 
-        if ((planet->type == tGasGiant)
-        || (planet->type == tSubGasGiant)
-        || (planet->type == tSubSubGasGiant))
-        {
-        planet->greenhouse_effect 		= FALSE;
-        planet->volatile_gas_inventory 	= INCREDIBLY_LARGE_NUMBER;
-        planet->surf_pressure 			= INCREDIBLY_LARGE_NUMBER;
+        if ((planet.planetType == PlanetObj.planet_type.tGasGiant)
+                || (planet.planetType == PlanetObj.planet_type.tSubGasGiant)
+                || (planet.planetType == PlanetObj.planet_type.tSubSubGasGiant)) {
+            planet.greenhouse_effect = false;
+            planet.volatile_gas_inventory = Constants.INCREDIBLY_LARGE_NUMBER;
+            planet.surf_pressure = Constants.INCREDIBLY_LARGE_NUMBER;
 
-        planet->boil_point 				= INCREDIBLY_LARGE_NUMBER;
+            planet.boil_point = Constants.INCREDIBLY_LARGE_NUMBER;
 
-        planet->surf_temp				= INCREDIBLY_LARGE_NUMBER;
-        planet->greenhs_rise 			= 0;
-        planet->albedo 					= about(GAS_GIANT_ALBEDO,0.1);
-        planet->hydrosphere 			= 1.0;
-        planet->cloud_cover	 			= 1.0;
-        planet->ice_cover	 			= 0.0;
-        planet->surf_grav			 	= gravity(planet->surf_accel);
-        planet->molec_weight			= min_molec_weight(planet);
-        planet->surf_grav 				= INCREDIBLY_LARGE_NUMBER;
-        planet->estimated_temp			= est_temp(sun->r_ecosphere, planet->a,  planet->albedo);
-        planet->estimated_terr_temp		= est_temp(sun->r_ecosphere, planet->a,  EARTH_ALBEDO);
+            planet.surf_temp = Constants.INCREDIBLY_LARGE_NUMBER;
+            planet.greenhs_rise = 0;
+            planet.albedo = Utils.about(Constants.GAS_GIANT_ALBEDO, 0.1);
+            planet.hydrosphere = 1.0;
+            planet.cloud_cover = 1.0;
+            planet.ice_cover = 0.0;
+            planet.surf_grav = enviro.gravity(planet.surf_accel);
+            planet.molec_weight = enviro.min_molec_weight(planet);
+            planet.surf_grav = Constants.INCREDIBLY_LARGE_NUMBER;
+            planet.estimated_temp = enviro.est_temp(sun.r_ecosphere, planet.a, planet.albedo);
+            planet.estimated_terr_temp = enviro.est_temp(sun.r_ecosphere, planet.a, Constants.EARTH_ALBEDO);
 
-        {
-        double temp = planet->estimated_terr_temp;
+            double temp = planet.estimated_terr_temp;
 
-        if ((temp >= FREEZING_POINT_OF_WATER)
-        && (temp <= EARTH_AVERAGE_KELVIN + 10.)
-        && (sun->age > 2.0E9))
-        {
-        habitable_jovians++;
+            if ((temp >= Constants.FREEZING_POINT_OF_WATER)
+                    && (temp <= Constants.EARTH_AVERAGE_KELVIN + 10.)
+                    && (sun.age > 2.0E9)) {
+                planet.habitable_jovian = true;
+                habitable_jovians++;
 
-        if (flag_verbose & 0x8000)
-        {
-        fprintf (stderr, "%s\t%s (%4.2LfEM %5.3Lf By)%s with earth-like temperature (%.1Lf C, %.1Lf F, %+.1Lf C Earth).\n",
-        planet_id,
-        planet->type == tGasGiant ? "Jovian" :
-        planet->type == tSubGasGiant ? "Sub-Jovian" :
-        planet->type == tSubSubGasGiant ? "Gas Dwarf" :
-        "Big",
-        planet->mass * SUN_MASS_IN_EARTH_MASSES,
-        sun->age /1.0E9,
-        planet->first_moon == NULL ? "" : " WITH MOON",
-        temp - FREEZING_POINT_OF_WATER,
-        32 + ((temp - FREEZING_POINT_OF_WATER) * 1.8),
-        temp - EARTH_AVERAGE_KELVIN);
-        }
-        }
-        }
-        }
-        else
-        {
-        planet->estimated_temp			= est_temp(sun->r_ecosphere, planet->a,  EARTH_ALBEDO);
-        planet->estimated_terr_temp		= est_temp(sun->r_ecosphere, planet->a,  EARTH_ALBEDO);
+            }
+        } else {
+            planet.estimated_temp = enviro.est_temp(sun.r_ecosphere, planet.a, Constants.EARTH_ALBEDO);
+            planet.estimated_terr_temp = enviro.est_temp(sun.r_ecosphere, planet.a, Constants.EARTH_ALBEDO);
 
-        planet->surf_grav 				= gravity(planet->surf_accel);
-        planet->molec_weight			= min_molec_weight(planet);
+            planet.surf_grav = enviro.gravity(planet.surf_accel);
+            planet.molec_weight = enviro.min_molec_weight(planet);
 
-        planet->greenhouse_effect 		= grnhouse(sun->r_ecosphere, planet->a);
-        planet->volatile_gas_inventory 	= vol_inventory(planet->mass,
-        planet->esc_velocity,
-        planet->rms_velocity,
-        sun->mass,
-        planet->orbit_zone,
-        planet->greenhouse_effect,
-        (planet->gas_mass
-        / planet->mass) > 0.000001);
-        planet->surf_pressure 			= pressure(planet->volatile_gas_inventory,
-        planet->radius,
-        planet->surf_grav);
+            planet.greenhouse_effect = enviro.grnhouse(sun.r_ecosphere, planet.a);
+            planet.volatile_gas_inventory = enviro.vol_inventory(planet.mass,
+                    planet.esc_velocity,
+                    planet.rms_velocity,
+                    sun.mass,
+                    planet.orbit_zone,
+                    planet.greenhouse_effect,
+                    (planet.gas_mass
+                            / planet.mass) > 0.000001);
+            planet.surf_pressure = enviro.pressure(planet.volatile_gas_inventory,
+                    planet.radius,
+                    planet.surf_grav);
 
-        if ((planet->surf_pressure == 0.0))
-        planet->boil_point 			= 0.0;
-        else
-        planet->boil_point 			= boiling_point(planet->surf_pressure);
+            if ((planet.surf_pressure == 0.0))
+                planet.boil_point = 0.0;
+            else
+                planet.boil_point = enviro.boiling_point(planet.surf_pressure);
 
-        iterate_surface_temp(planet);		/*	Sets:
-												 *		planet->surf_temp
-												 *		planet->greenhs_rise
-												 *		planet->albedo
-												 *		planet->hydrosphere
-												 *		planet->cloud_cover
-												 *		planet->ice_cover
+            enviro.iterate_surface_temp(planet);		/*	Sets:
+                                                 *		planet.surf_temp
+												 *		planet.greenhs_rise
+												 *		planet.albedo
+												 *		planet.hydrosphere
+												 *		planet.cloud_cover
+												 *		planet.ice_cover
 												 */
 
-        if (do_gases &&
-        (planet->max_temp >= FREEZING_POINT_OF_WATER) &&
-        (planet->min_temp <= planet->boil_point))
-        calculate_gases(sun, planet, planet_id);
-			
+            if (do_gases &&
+                    (planet.max_temp >= Constants.FREEZING_POINT_OF_WATER) &&
+                    (planet.min_temp <= planet.boil_point))
+                calculate_gases(sun, planet, planet_id);
+
 			/*
-			 *	Next we assign a type to the planet.
+             *	Next we assign a type to the planet.
 			 */
 
-        if (planet->surf_pressure < 1.0)
-        {
-        if (!is_moon
-        && ((planet->mass * SUN_MASS_IN_EARTH_MASSES) < ASTEROID_MASS_LIMIT))
-        planet->type 			= tAsteroids;
-        else
-        planet->type 			= tRock;
-        }
-        else if ((planet->surf_pressure > 6000.0) &&
-        (planet->molec_weight <= 2.0))	// Retains Hydrogen
-        {
-        planet->type = tSubSubGasGiant;
-        planet->gases = 0;
-        free(planet->atmosphere);
-        planet->atmosphere = NULL;
-        }
-        else
-        {										// Atmospheres:
-        if (((int)planet->day == (int)(planet->orb_period * 24.0) ||
-        (planet->resonant_period)))
-        planet->type = t1Face;
-        else if (planet->hydrosphere >= 0.95)
-        planet->type = tWater;				// >95% water
-        else if (planet->ice_cover >= 0.95)
-        planet->type = tIce;				// >95% ice
-        else if (planet->hydrosphere > 0.05)
-        planet->type = tTerrestrial;		// Terrestrial
-        // else <5% water
-        else if (planet->max_temp > planet->boil_point)
-        planet->type = tVenusian;			// Hot = Venusian
-        else if ((planet->gas_mass / planet->mass) > 0.0001)
-        {										// Accreted gas
-        planet->type = tIce;				// But no Greenhouse
-        planet->ice_cover = 1.0;			// or liquid water
-        }										// Make it an Ice World
-        else if (planet->surf_pressure <= 250.0)// Thin air = Martian
-        planet->type = tMartian;
-        else if (planet->surf_temp < FREEZING_POINT_OF_WATER)
-        planet->type = tIce;
-        else
-        {
-        planet->type = tUnknown;
+            if (planet.surf_pressure < 1.0) {
+                if (!is_moon
+                        && ((planet.mass * Constants.SUN_MASS_IN_EARTH_MASSES) < Constants.ASTEROID_MASS_LIMIT))
+                    planet.planetType = PlanetObj.planet_type.tAsteroids;
+                else
+                    planet.planetType = PlanetObj.planet_type.tRock;
+            } else if ((planet.surf_pressure > 6000.0) &&
+                    (planet.molec_weight <= 2.0))    // Retains Hydrogen
+            {
+                planet.planetType = PlanetObj.planet_type.tSubSubGasGiant;
+                planet.gases = 0;
+                planet.atmosphere = null;
+            } else {                                        // Atmospheres:
+                if (((int) planet.day == (int) (planet.orb_period * 24.0) ||
+                        (planet.resonant_period)))
+                    planet.planetType = PlanetObj.planet_type.t1Face;
+                else if (planet.hydrosphere >= 0.95)
+                    planet.planetType = PlanetObj.planet_type.tWater;                // >95% water
+                else if (planet.ice_cover >= 0.95)
+                    planet.planetType = PlanetObj.planet_type.tIce;                // >95% ice
+                else if (planet.hydrosphere > 0.05)
+                    planet.planetType = PlanetObj.planet_type.tTerrestrial;        // Terrestrial
+                    // else <5% water
+                else if (planet.max_temp > planet.boil_point)
+                    planet.planetType = PlanetObj.planet_type.tVenusian;            // Hot = Venusian
+                else if ((planet.gas_mass / planet.mass) > 0.0001) {                                        // Accreted gas
+                    planet.planetType = PlanetObj.planet_type.tIce;                // But no Greenhouse
+                    planet.ice_cover = 1.0;            // or liquid water
+                }                                        // Make it an Ice World
+                else if (planet.surf_pressure <= 250.0)// Thin air = Martian
+                    planet.planetType = PlanetObj.planet_type.tMartian;
+                else if (planet.surf_temp < Constants.FREEZING_POINT_OF_WATER)
+                    planet.planetType = PlanetObj.planet_type.tIce;
+                else {
+                    planet.planetType = PlanetObj.planet_type.tUnknown;
 
-        if (flag_verbose & 0x0001)
-        fprintf (stderr, "%12s\tp=%4.2Lf\tm=%4.2Lf\tg=%4.2Lf\tt=%+.1Lf\t%s\t Unknown %s\n",
-        type_string (planet->type),
-        planet->surf_pressure,
-        planet->mass * SUN_MASS_IN_EARTH_MASSES,
-        planet->surf_grav,
-        planet->surf_temp  - EARTH_AVERAGE_KELVIN,
-        planet_id,
-        ((int)planet->day == (int)(planet->orb_period * 24.0) ||
-        (planet->resonant_period)) ? "(1-Face)" : ""
-        );
-        }
-        }
+
+                }
+            }
         }
 
-        if (do_moons && !is_moon)
-        {
-        if (planet->first_moon != NULL)
-        {
-        int 			n;
-        planet_pointer	ptr;
+        if (do_moons && !is_moon) {
+            if (planet.first_moon != null) {
+                int n;
+                PlanetObj ptr;
 
-        for (n=0, ptr=planet->first_moon;
-        ptr != NULL;
-        ptr=ptr->next_planet)
-        {
-        if (ptr->mass * SUN_MASS_IN_EARTH_MASSES > .000001)
-        {
-        char	moon_id[80];
-        double	roche_limit = 0.0;
-        double	hill_sphere = 0.0;
+                for (n = 0, ptr = planet.first_moon;
+                     ptr != null;
+                     ptr = ptr.next_planet) {
+                    if (ptr.mass * Constants.SUN_MASS_IN_EARTH_MASSES > .000001) {
+                        String moon_id = "";
+                        double roche_limit = 0.0;
+                        double hill_sphere = 0.0;
 
-        ptr->a = planet->a;
-        ptr->e = planet->e;
+                        ptr.a = planet.a;
+                        ptr.e = planet.e;
 
-        n++;
+                        n++;
 
-        sprintf(moon_id,
-        "%s.%d",
-        planet_id, n);
 
-        generate_planet(ptr, n,
-        sun, random_tilt,
-        moon_id,
-        do_gases,
-        do_moons, TRUE);	// Adjusts ptr->density
+                        generate_planet(ptr, n,
+                                sun,
+                                moon_id,
+                                do_gases,
+                                do_moons, true);    // Adjusts ptr.density
 
-        roche_limit = 2.44 * planet->radius * pow((planet->density / ptr->density), (1.0 / 3.0));
-        hill_sphere = planet->a * KM_PER_AU * pow((planet->mass / (3.0 * sun->mass)), (1.0 / 3.0));
+                        roche_limit = 2.44 * planet.radius * Math.pow((planet.density / ptr.density), (1.0 / 3.0));
+                        hill_sphere = planet.a * Constants.KM_PER_AU * Math.pow((planet.mass / (3.0 * sun.mass)), (1.0 / 3.0));
 
-        if ((roche_limit * 3.0) < hill_sphere)
-        {
-        ptr->moon_a = random_number(roche_limit * 1.5, hill_sphere / 2.0) / KM_PER_AU;
-        ptr->moon_e = random_eccentricity ();
-        }
-        else
-        {
-        ptr->moon_a = 0;
-        ptr->moon_e = 0;
+                        if ((roche_limit * 3.0) < hill_sphere) {
+                            ptr.moon_a = Utils.random_number(roche_limit * 1.5, hill_sphere / 2.0) / Constants.KM_PER_AU;
+                            ptr.moon_e = Utils.random_eccentricity();
+                        } else {
+                            ptr.moon_a = 0;
+                            ptr.moon_e = 0;
+                        }
+
+
+                    }
+                }
+            }
         }
 
-        if (flag_verbose & 0x40000)
-        {
-        fprintf (stderr,
-        "   Roche limit: R = %4.2Lg, rM = %4.2Lg, rm = %4.2Lg -> %.0Lf km\n"
-        "   Hill Sphere: a = %4.2Lg, m = %4.2Lg, M = %4.2Lg -> %.0Lf km\n"
-        "%s Moon orbit: a = %.0Lf km, e = %.0Lg\n",
-        planet->radius, planet->density, ptr->density,
-        roche_limit,
-        planet->a * KM_PER_AU, planet->mass * SOLAR_MASS_IN_KILOGRAMS, sun->mass * SOLAR_MASS_IN_KILOGRAMS,
-        hill_sphere,
-        moon_id,
-        ptr->moon_a * KM_PER_AU, ptr->moon_e
-        );
-        }
+    }
 
-        if (flag_verbose & 0x1000)
-        {
-        fprintf (stderr, "  %s: (%7.2LfEM) %d %4.2LgEM\n",
-        planet_id,
-        planet->mass * SUN_MASS_IN_EARTH_MASSES,
-        n,
-        ptr->mass * SUN_MASS_IN_EARTH_MASSES);
-        }
-        }
-        }
-        }
-        }
+    void check_planet(PlanetObj planet, String planet_id, boolean is_moon) {
 
-        }
-
-        void check_planet(planet_pointer	planet,
-        char*				planet_id,
-        int				is_moon)
-        {
-        {
         int tIndex = 0;
 
-        switch (planet->type)
-        {
-        case tUnknown:			tIndex = 0;		break;
-        case tRock:				tIndex = 1;		break;
-        case tVenusian:			tIndex = 2;		break;
-        case tTerrestrial:		tIndex = 3;		break;
-        case tSubSubGasGiant:	tIndex = 4;		break;
-        case tSubGasGiant:		tIndex = 5;		break;
-        case tGasGiant:			tIndex = 6;		break;
-        case tMartian:			tIndex = 7;		break;
-        case tWater:			tIndex = 8;		break;
-        case tIce:				tIndex = 9;		break;
-        case tAsteroids: 		tIndex = 10;	break;
-        case t1Face:			tIndex = 11;	break;
+        switch (planet.planetType) {
+            case tUnknown:
+                tIndex = 0;
+                break;
+            case tRock:
+                tIndex = 1;
+                break;
+            case tVenusian:
+                tIndex = 2;
+                break;
+            case tTerrestrial:
+                tIndex = 3;
+                break;
+            case tSubSubGasGiant:
+                tIndex = 4;
+                break;
+            case tSubGasGiant:
+                tIndex = 5;
+                break;
+            case tGasGiant:
+                tIndex = 6;
+                break;
+            case tMartian:
+                tIndex = 7;
+                break;
+            case tWater:
+                tIndex = 8;
+                break;
+            case tIce:
+                tIndex = 9;
+                break;
+            case tAsteroids:
+                tIndex = 10;
+                break;
+            case t1Face:
+                tIndex = 11;
+                break;
         }
 
         if (type_counts[tIndex] == 0)
-        ++type_count;
+            ++type_count;
 
         ++type_counts[tIndex];
 
-        }
-	
+
+
 	/* Check for and list planets with breathable atmospheres */
+        PlanetObj.breathabilty_type breathe = enviro.breathability(planet);
 
-        {
-        unsigned int breathe = breathability (planet);
+        if ((breathe == PlanetObj.breathabilty_type.BREATHABLE) &&
+                (!planet.resonant_period) &&        // Option needed?
+                true //((int) planet.day != (int) (planet.orb_period * 24.0))
+                ) {
+            double illumination = Utils.pow2(1.0 / planet.a) * (planet.sun).luminosity;
+            planet.habitable = true;
 
-        if ((breathe == BREATHABLE) &&
-        (!planet->resonant_period) &&		// Option needed?
-        ((int)planet->day != (int)(planet->orb_period * 24.0)))
-        {
-        int	list_it	= FALSE;
-        double illumination = pow2 (1.0 / planet->a)
-        * (planet->sun)->luminosity;
+            habitable++;
 
-        habitable++;
+            if (min_breathable_temp > planet.surf_temp)
+                min_breathable_temp = planet.surf_temp;
 
-        if (min_breathable_temp > planet->surf_temp)
-        {
-        min_breathable_temp = planet->surf_temp;
+            if (max_breathable_temp < planet.surf_temp)
+                max_breathable_temp = planet.surf_temp;
 
-        if (flag_verbose & 0x0002)
-        list_it = TRUE;
+            if (min_breathable_g > planet.surf_grav)
+                min_breathable_g = planet.surf_grav;
+
+            if (max_breathable_g < planet.surf_grav)
+                max_breathable_g = planet.surf_grav;
+
+            if (min_breathable_l > illumination)
+                min_breathable_l = illumination;
+
+
+            if (max_breathable_l < illumination)
+                max_breathable_l = illumination;
+
+
+            if (planet.planetType == PlanetObj.planet_type.tTerrestrial) {
+                if (min_breathable_terrestrial_g > planet.surf_grav)
+                    min_breathable_terrestrial_g = planet.surf_grav;
+
+
+                if (max_breathable_terrestrial_g < planet.surf_grav)
+                    max_breathable_terrestrial_g = planet.surf_grav;
+
+
+                if (min_breathable_terrestrial_l > illumination)
+                    min_breathable_terrestrial_l = illumination;
+
+
+                if (max_breathable_terrestrial_l < illumination)
+                    max_breathable_terrestrial_l = illumination;
+            }
+
+            if (min_breathable_p > planet.surf_pressure)
+                min_breathable_p = planet.surf_pressure;
+
+
+            if (max_breathable_p < planet.surf_pressure)
+                max_breathable_p = planet.surf_pressure;
+
         }
 
-        if (max_breathable_temp < planet->surf_temp)
-        {
-        max_breathable_temp = planet->surf_temp;
 
-        if (flag_verbose & 0x0002)
-        list_it = TRUE;
+        if (is_moon && max_moon_mass < planet.mass) {
+            max_moon_mass = planet.mass;
+
         }
 
-        if (min_breathable_g > planet->surf_grav)
-        {
-        min_breathable_g = planet->surf_grav;
 
-        if (flag_verbose & 0x0002)
-        list_it = TRUE;
+        double rel_temp = (planet.surf_temp - Constants.FREEZING_POINT_OF_WATER) -
+                Constants.EARTH_AVERAGE_CELSIUS;
+        double seas = (planet.hydrosphere * 100.0);
+        double clouds = (planet.cloud_cover * 100.0);
+        double pressure = (planet.surf_pressure /
+                Constants.EARTH_SURF_PRES_IN_MILLIBARS);
+        double ice = (planet.ice_cover * 100.0);
+        double gravity = planet.surf_grav;
+        PlanetObj.breathabilty_type breathe2 = enviro.breathability(planet);
+
+        if ((gravity >= .8) &&
+                (gravity <= 1.2) &&
+                (rel_temp >= -2.0) &&
+                (rel_temp <= 3.0) &&
+                (ice <= 10.) &&
+                (pressure >= 0.5) &&
+                (pressure <= 2.0) &&
+                (clouds >= 40.) &&
+                (clouds <= 80.) &&
+                (seas >= 50.) &&
+                (seas <= 80.) &&
+                (planet.planetType != PlanetObj.planet_type.tWater) &&
+                (breathe2 == PlanetObj.breathabilty_type.BREATHABLE)) {
+            planet.earthlike = true;
+            earthlike++;
+
         }
+    }
 
-        if (max_breathable_g < planet->surf_grav)
-        {
-        max_breathable_g = planet->surf_grav;
-
-        if (flag_verbose & 0x0002)
-        list_it = TRUE;
-        }
-
-        if (min_breathable_l > illumination)
-        {
-        min_breathable_l = illumination;
-
-        if (flag_verbose & 0x0002)
-        list_it = TRUE;
-        }
-
-        if (max_breathable_l < illumination)
-        {
-        max_breathable_l = illumination;
-
-        if (flag_verbose & 0x0002)
-        list_it = TRUE;
-        }
-
-        if (planet->type == tTerrestrial)
-        {
-        if (min_breathable_terrestrial_g > planet->surf_grav)
-        {
-        min_breathable_terrestrial_g = planet->surf_grav;
-
-        if (flag_verbose & 0x0002)
-        list_it = TRUE;
-        }
-
-        if (max_breathable_terrestrial_g < planet->surf_grav)
-        {
-        max_breathable_terrestrial_g = planet->surf_grav;
-
-        if (flag_verbose & 0x0002)
-        list_it = TRUE;
-        }
-
-        if (min_breathable_terrestrial_l > illumination)
-        {
-        min_breathable_terrestrial_l = illumination;
-
-        if (flag_verbose & 0x0002)
-        list_it = TRUE;
-        }
-
-        if (max_breathable_terrestrial_l < illumination)
-        {
-        max_breathable_terrestrial_l = illumination;
-
-        if (flag_verbose & 0x0002)
-        list_it = TRUE;
-        }
-        }
-
-        if (min_breathable_p > planet->surf_pressure)
-        {
-        min_breathable_p = planet->surf_pressure;
-
-        if (flag_verbose & 0x0002)
-        list_it = TRUE;
-        }
-
-        if (max_breathable_p < planet->surf_pressure)
-        {
-        max_breathable_p = planet->surf_pressure;
-
-        if (flag_verbose & 0x0002)
-        list_it = TRUE;
-        }
-
-        if (flag_verbose & 0x0004)
-        list_it = TRUE;
-
-        if (list_it)
-        fprintf (stderr, "%12s\tp=%4.2Lf\tm=%4.2Lf\tg=%4.2Lf\tt=%+.1Lf\tl=%4.2Lf\t%s\n",
-        type_string (planet->type),
-        planet->surf_pressure,
-        planet->mass * SUN_MASS_IN_EARTH_MASSES,
-        planet->surf_grav,
-        planet->surf_temp  - EARTH_AVERAGE_KELVIN,
-        illumination,
-        planet_id);
-        }
-        }
-
-        if (is_moon
-        && max_moon_mass < planet->mass)
-        {
-        max_moon_mass = planet->mass;
-
-        if (flag_verbose & 0x0002)
-        fprintf (stderr, "%12s\tp=%4.2Lf\tm=%4.2Lf\tg=%4.2Lf\tt=%+.1Lf\t%s Moon Mass\n",
-        type_string (planet->type),
-        planet->surf_pressure,
-        planet->mass * SUN_MASS_IN_EARTH_MASSES,
-        planet->surf_grav,
-        planet->surf_temp  - EARTH_AVERAGE_KELVIN,
-        planet_id);
-        }
-
-        if ((flag_verbose & 0x0800)
-        && (planet->dust_mass * SUN_MASS_IN_EARTH_MASSES >= 0.0006)
-        && (planet->gas_mass * SUN_MASS_IN_EARTH_MASSES >= 0.0006)
-        && (planet->type != tGasGiant)
-        && (planet->type != tSubGasGiant)
-        )
-        {
-        int core_size = (int)((50. * planet->core_radius) / planet->radius);
-
-        if (core_size <= 49)
-        {
-        fprintf (stderr, "%12s\tp=%4.2Lf\tr=%4.2Lf\tm=%4.2Lf\t%s\t%d\n",
-        type_string (planet->type),
-        planet->core_radius,
-        planet->radius,
-        planet->mass * SUN_MASS_IN_EARTH_MASSES,
-        planet_id,
-        50-core_size);
-        }
-        }
-
-        {
-        double  rel_temp   = (planet->surf_temp -  FREEZING_POINT_OF_WATER) -
-        EARTH_AVERAGE_CELSIUS;
-        double	 seas       = (planet->hydrosphere * 100.0);
-        double	 clouds     = (planet->cloud_cover * 100.0);
-        double	 pressure   = (planet->surf_pressure /
-        EARTH_SURF_PRES_IN_MILLIBARS);
-        double	 ice        = (planet->ice_cover * 100.0);
-        double	 gravity    = planet->surf_grav;
-        unsigned int breathe    = breathability (planet);
-
-        if ((gravity 	>= .8) &&
-        (gravity 	<= 1.2) &&
-        (rel_temp 	>= -2.0) &&
-        (rel_temp 	<= 3.0) &&
-        (ice 		<= 10.) &&
-        (pressure   >= 0.5) &&
-        (pressure   <= 2.0) &&
-        (clouds		>= 40.) &&
-        (clouds		<= 80.) &&
-        (seas 		>= 50.) &&
-        (seas 		<= 80.) &&
-        (planet->type != tWater) &&
-        (breathe    == BREATHABLE))
-        {
-        earthlike++;
-
-        if (flag_verbose & 0x0008)
-        fprintf (stderr, "%12s\tp=%4.2Lf\tm=%4.2Lf\tg=%4.2Lf\tt=%+.1Lf\t%d %s\tEarth-like\n",
-        type_string (planet->type),
-        planet->surf_pressure,
-        planet->mass * SUN_MASS_IN_EARTH_MASSES,
-        planet->surf_grav,
-        planet->surf_temp  - EARTH_AVERAGE_KELVIN,
-        habitable,
-        planet_id);
-        } else if ((flag_verbose & 0x0008) &&
-        (breathe   == BREATHABLE) &&
-        (gravity	 > 1.3) &&
-        (habitable	 > 1) &&
-        ((rel_temp  < -2.0) ||
-        (ice		 > 10.))
-        )
-        {
-        fprintf (stderr, "%12s\tp=%4.2Lf\tm=%4.2Lf\tg=%4.2Lf\tt=%+.1Lf\t%s\tSphinx-like\n",
-        type_string (planet->type),
-        planet->surf_pressure,
-        planet->mass * SUN_MASS_IN_EARTH_MASSES,
-        planet->surf_grav,
-        planet->surf_temp  - EARTH_AVERAGE_KELVIN,
-        planet_id);
-        }
-        }
-        }
-
-        void generate_planets(sun*			sun,
-        int 			random_tilt,
-        char			flag_char,
-        int			sys_no,
-        char*			system_name,
-        int			do_gases,
-        int			do_moons)
-        {
-        planet_pointer	planet;
-        int				planet_no = 0;
-        planet_pointer 	moon;
-        int 			moons = 0;
+    void generate_planets(SunObj sun,
+                          String system_name,
+                          boolean do_gases,
+                          boolean do_moons) {
+        PlanetObj planet;
+        int planet_no = 0;
+        PlanetObj moon;
+        int moons = 0;
 
         for (planet = innermost_planet, planet_no = 1;
-        planet != NULL;
-        planet = planet->next_planet, planet_no++)
-        {
-        char	planet_id[80];
+             planet != null;
+             planet = planet.next_planet, planet_no++) {
+            String planet_id;
 
-        sprintf(planet_id,
-        "%s (-s%ld -%c%d) %d",
-        system_name, flag_seed, flag_char, sys_no, planet_no);
+            planet_id = String.format("%s %d %d",
+                    system_name, flag_seed, planet_no);
 
-        generate_planet(planet, planet_no,
-        sun, random_tilt,
-        planet_id,
-        do_gases, do_moons, FALSE);
-		
+            generate_planet(planet, planet_no,
+                    sun,
+                    planet_id,
+                    do_gases, do_moons, false);
+
 		/*
 		 *	Now we're ready to test for habitable planets,
 		 *	so we can count and log them and such
 		 */
 
-        check_planet(planet, planet_id, FALSE);
+            check_planet(planet, planet_id, false);
 
-        for (moon=planet->first_moon, moons=1;
-        moon != NULL;
-        moon=moon->next_planet, moons++)
-        {
-        char	moon_id[80];
-
-        sprintf(moon_id,
-        "%s.%d",
-        planet_id, moons);
-        check_planet(moon, moon_id, TRUE);
+            for (moon = planet.first_moon, moons = 1;
+                 moon != null;
+                 moon = moon.next_planet, moons++) {
+                String moon_id;
+                moon_id = String.format("%s.%d", planet_id, moons);
+                check_planet(moon, moon_id, true);
+            }
         }
-        }
-        }
+    }
 
 /*
  *  Sort a ChemTable by decreasing abundance.
  */
 
-static int diminishing_abundance(const void *xp, const void *yp)
-        {
-        const ChemTable *x = (ChemTable *) xp;
-        const ChemTable *y = (ChemTable *) yp;
-        double    xx = x->abunds * x->abunde;
-        double    yy = y->abunds * y->abunde;
+    static int diminishing_abundance(ChemTable x, ChemTable y) {
+
+        double xx = x.abunds * x.abunde;
+        double yy = y.abunds * y.abunde;
 
         if (xx < yy)
             return +1;
         else
             return (xx > yy ? -1 : 0);
-        }
+    }
 
 /*
  *  Sort a ChemTable by decreasing pressure.
  */
 
-static int diminishing_pressure(const void *xp, const void *yp)
-        {
-        const gas *x = (gas *) xp;
-        const gas *y = (gas *) yp;
+    static int diminishing_pressure(Gas x, Gas y) {
+        if (x.surf_pressure < y.surf_pressure)
+            return +1;
+        return (x.surf_pressure > y.surf_pressure ? -1 : 0);
+    }
 
-        if (x->surf_pressure < y->surf_pressure)
-        return +1;
-        return (x->surf_pressure > y->surf_pressure ? -1 : 0);
+    public SunObj GenerateSystem(String sys_name_arg,
+                               double mass_arg
+
+    ) {
+        SunObj sun = new SunObj();
+
+        int index = 0;
+        boolean do_gases = true;
+
+        boolean do_moons = true;
+
+
+        for (index = 0; index < max_gas; index++) {
+            if (gases[index].max_ipp == 0.0)
+                gases[index].max_ipp = Constants.INCREDIBLY_LARGE_NUMBER;
         }
 
-        int stargen (actions		action,
-        char			flag_char,
-        String			path,
-        String			url_path_arg,
-        String			filename_arg,
-        String			sys_name_arg,
 
-        FILE *			sgOut,
-        FILE *			sgErr,
-        String			prognam,
-        double	mass_arg,
-        long			seed_arg,
-        int			count_arg,
-        int			incr_arg,
-        catalog *		cat_arg,
-        int			sys_no_arg,
+        Arrays.sort(gases, new Comparator<ChemTable>() {
+            @Override
+            public int compare(ChemTable o1, ChemTable o2) {
+                return diminishing_abundance(o1, o2);
+            }
+        });
 
-        double	ratio_arg,
+        sun.mass = mass_arg;
 
-        int			flags_arg,
-        int			out_format,
-        int			graphic_format
-        )
-        {
-        sun				sun					= {0.0, 0.0, 0.0, 0.0, 0.0, ""};
-        double		min_mass 			= 0.4;
-        double		inc_mass 			= 0.05;
-        double		max_mass 			= 2.35;
-        int				system_count		= 1;
-        int				seed_increment		= 1;
 
-        char			default_path[]		= SUBDIR;			/* OS specific */
-        char 			default_url_path[]	= "../";
-        char 			*url_path			= default_url_path;
-        char			thumbnail_file[300]	= "Thumbnails";
-        char 			file_name[300]		= "StarGen";
-        char			subdir[300]			= "";
-        char			csv_file_name[300]	= "StarGen.csv";
 
-        FILE 			*html_file			= NULL;
-        FILE 			*thumbnails			= NULL;
-        FILE			*csv_file			= NULL;
-
-        int  			index				= 0;
-        int				do_catalog			= ((cat_arg != NULL) && (sys_no_arg == 0));
-        int				catalog_count		= 0;
-        int				do_gases			= (flags_arg & fDoGases) != 0;
-        int 			use_solar_system	= (flags_arg & fUseSolarsystem) != 0;
-        int				reuse_solar_system	= (flags_arg & fReuseSolarsystem) != 0;
-        int				use_known_planets	= (flags_arg & fUseKnownPlanets) != 0;
-        int				no_generate			= (flags_arg & fNoGenerate) != 0;
-        int				do_moons			= (flags_arg & fDoMoons) != 0;
-        int				only_habitable		= (flags_arg & fOnlyHabitable) != 0;
-        int				only_multi_habitable= (flags_arg & fOnlyMultiHabitable) != 0;
-        int				only_jovian_habitable=(flags_arg & fOnlyJovianHabitable) != 0;
-        int				only_earthlike		= (flags_arg & fOnlyEarthlike) != 0;
-
-        if (do_catalog)
-        catalog_count = cat_arg->count;
-
-        if (only_habitable && only_multi_habitable)
-        only_habitable = FALSE;
-
-        if (only_habitable && only_earthlike)
-        only_habitable = FALSE;
-
-        if (sgErr == NULL)
-        sgErr = stderr;
-
-        if ((prognam == NULL) || (prognam[0] == '\0'))
-        prognam = "StarGen";
-
-        if ((path == NULL) || (path[0] == '\0'))
-        path 		= default_path;
-
-        if (graphic_format == 0)
-        graphic_format = gfGIF;
-
-        if ((url_path_arg != NULL) && (url_path_arg[0] != '\0'))
-        url_path	= url_path_arg;
-
-        {									// Find the last sub-dir in the path:
-        size_t	l = strlen(DIRSEP);
-        char*	s = path;
-        char*	e = s + strlen(s) - l;
-
-        if (e < s || (strcmp(e, DIRSEP) != 0))
-        {
-        fprintf (stderr, "Invalid path: '%s'\n", path);
-        return 1;
-        }
-
-        for (;;)
-        {
-        char*	p = strstr(s, DIRSEP);
-
-        if (p >= e)
-        break;
-
-        s = p + l;
-        }
-
-        strncpy (subdir, s, strlen(s) - l);
-        strncat (subdir, "/", 80-strlen(subdir));
-        }
-
-        for (index = 0; index < max_gas; index++)
-        if (gases[index].max_ipp == 0.0)
-        gases[index].max_ipp = INCREDIBLY_LARGE_NUMBER;
-
-        qsort(gases, (sizeof(gases) / sizeof(ChemTable)) - 1,
-        sizeof(*gases),
-        diminishing_abundance);
-
-        switch (action)
-        {
-        case aListGases:
-        {
-        double	total = 0.0;
-
-        if (sgOut == NULL)
-        sgOut = stdout;
-
-        for (index = 0; index < max_gas; index++)
-        {
-        if (gases[index].weight >= AN_N
-        && gases[index].max_ipp < 1E9)
-        total += gases[index].max_ipp;
-
-        fprintf (sgOut, " %2d: %4s - %-13s %3.0f mb - %5.0Lf mb\n",
-        index,
-        gases[index].symbol,
-        gases[index].name,
-        gases[index].num == AN_O ? MIN_O2_IPP : 0.0,
-        gases[index].max_ipp);
-        }
-        fprintf (sgOut, "Total Max ipp: %5.0Lf\n", total);
-        fprintf (sgOut, "Max pressure: %5.0f atm\n", MAX_HABITABLE_PRESSURE);
-
-        return (1);
-        }
-        case aListCatalog:
-        if (sgOut == NULL)
-        sgOut = stdout;
-
-        for (index = 0; index < catalog_count; index++)
-        {
-        fprintf (sgOut, "%3d: %-30.30s M: %4.2LG L: %4.2LG\n",
-        index,
-        (*(cat_arg->stars))[index].name,
-        (*(cat_arg->stars))[index].mass,
-        (*(cat_arg->stars))[index].luminosity);
-        }
-
-        return (1);
-
-        case aListCatalogAsHTML:
-        if (sgOut == NULL)
-        sgOut = stdout;
-
-        for (index = 0; index < catalog_count; index++)
-        {
-        fprintf (sgOut, "\t<option value=%d>%s</option>\n",
-        index,
-        (*(cat_arg->stars))[index].name);
-        }
-
-        return (1);
-
-        case aSizeCheck:
-        {
-        double	temp = est_temp(1.0, 1.0,  EARTH_ALBEDO);
-
-        if (sgOut == NULL)
-        sgOut = stdout;
-
-        fprintf (sgOut, "Size of float: %ld\n",
-        sizeof(float));
-        fprintf (sgOut, "Size of doubles: %ld\n",
-        sizeof(double));
-        fprintf (sgOut, "Size of doubles: %ld\n\n",
-        sizeof(double));
-        fprintf (sgOut, "Earth Eff Temp: %5.1Lf K, %5.1Lf C, Earth rel: %5.1Lf C\n\n",
-        temp,
-        temp - FREEZING_POINT_OF_WATER,
-        temp - EARTH_AVERAGE_KELVIN);
-
-        return (1);
-        }
-
-        case aListVerbosity:
-        if (sgOut == NULL)
-        sgOut = stdout;
-
-        fprintf (sgOut,
-        "Verbosity flags are hexidecimal numbers:\n"
-        "\t0001\tEarthlike count\n"
-        "\t0002\tTrace Min/Max\n"
-        "\t0004\tList Earthlike\n"
-        "\t\n"
-        "\t0010\tList Gases\n"
-        "\t0020\tTrace temp iterations\n"
-        "\t0040\tGas lifetimes\n"
-        "\t0080\tList loss of accreted gas mass\n"
-        "\t\n"
-        "\t0100\tInjecting, collision\n"
-        "\t0200\tChecking..., Failed...\n"
-        "\t0400\tList binary info\n"
-        "\t0800\tList accreted atmospheres\n"
-        "\t\n"
-        "\t1000\tMoons (experimental)\n"
-        "\t2000\tOxygen poisoned (experimental)\n"
-        "\t4000\tTrace gas percentages\n"
-        "\t8000\tList Jovians in the ecosphere\n"
-        "\t\n"
-        "\t10000\tList type diversity\n"
-        "\t20000\tTrace Surface temp interations\n"
-        );
-        return (1);
-        case aGenerate:
-
-        break;
-        }
-
-        flag_seed		= seed_arg;
-        sun.mass 		= mass_arg;
-        system_count	= count_arg;
-        seed_increment	= incr_arg;
-
-        if (ratio_arg > 0.0)
-        dust_density_coeff *= ratio_arg;
-
-        if (reuse_solar_system)
-        {
-        system_count = 1 + (int) ((max_mass - min_mass) / inc_mass);
-
-        earth.mass = (EM(min_mass));
-
-        sun.luminosity 	= 1.0;
-        sun.mass 		= 1.0;
-        sun.life 		= 1.0E10;
-        sun.age 		= 5.0E9;
-        sun.r_ecosphere	= 1.0;
-
-        use_solar_system = TRUE;
-        }
-        else if (do_catalog)
-        {
-        system_count = catalog_count + ((system_count - 1) * (catalog_count - 1));
-        use_solar_system = TRUE;
-        }
-
-        if ((system_count > 1)
-        && !(out_format == ffCSVdl))
-        {
-        if (strlen(filename_arg) > 0)
-        strcpy(thumbnail_file, filename_arg);
-
-        thumbnails = open_html_file ("Thumbnails", flag_seed, path, url_path, thumbnail_file, ".html",
-        prognam, sgOut);
-        if (thumbnails == NULL)
-        {
-        fprintf(sgErr, "Could not open file %s%s\n",
-        path, thumbnail_file);
-        exit(0);
-        }
-        }
-
-        if ((out_format == ffCSV) || (out_format == ffCSVdl))
-        {
-        char	csv_url[300]	= "";
-
-        if ((sgOut != NULL))
-        {
-        char sys_no[10] = "x";
-
-        if (!do_catalog)
-        sprintf(&sys_no[0], "%d", sys_no_arg-1);
-
-        if (out_format == ffCSVdl)
-        csv_file = sgOut;
-
-        sprintf (&csv_url[0],
-        "/cgi-bin/StarGen.pl?Catalog=%s&Dole=%s&SolStation=%s&Mass=%LG&Output=%s&Seed=%ld&Count=%d&Incr=%d&Gas=%s&Moon=%s&SVG=%s&DoIt=CSV",
-        (cat_arg == NULL) ? "none" : cat_arg->arg,
-        sys_no,
-        sys_no,
-        sun.mass,
-        (only_earthlike) ? "E"
-        : (only_multi_habitable) ? "2"
-        : (only_habitable) ? "H"
-        : "all",
-        flag_seed,
-        count_arg,
-        incr_arg,
-        (do_gases)					? "on" : "off",	// one of ("on", "off")
-        (do_moons)					? "on" : "off",	// one of ("on", "off")
-        (graphic_format == gfSVG)	? "on" : "off"	// one of ("on", "off")
-        );
-        }
-        else
-        {
-        char cleaned_arg[300] = "StarGen";
-
-        if (strlen(filename_arg) > 0)
-        {
-        Stringptr;
-
-        strcpy (cleaned_arg, filename_arg);
-
-        ptr = strrchr(cleaned_arg, '.');
-
-        if ((ptr != NULL)
-        && (strcmp(ptr, ".html") == 0))
-        *ptr = '\0';
-        }
-
-        if (thumbnails != NULL)
-        {
-        sprintf (&csv_file_name[0],
-        "%s-%ld.csv",
-        cleaned_arg,
-        flag_seed);
-        }
-        else
-        {
-        sprintf (&csv_file_name[0],
-        "%s.csv",
-        cleaned_arg);
-        }
-
-        sprintf (&csv_url[0],
-        "%s%s%s",
-        url_path,
-        subdir,
-        csv_file_name);
-
-        csv_file = open_csv_file (path, csv_file_name);
-        }
-
-        if ((csv_file == NULL) &&
-        !((out_format == ffCSV) && (sgOut != NULL)))
-        {
-        fprintf(sgErr, "Could not open file %s%s\n",
-        path, csv_file_name);
-        exit(0);
-        }
-
-        if (thumbnails != NULL)
-        csv_thumbnails(thumbnails, url_path, subdir, csv_file_name, csv_url);
-        }
-
-        for (index = 0; index < system_count; index++)
-        {
-        char			system_name[80];
-        char			designation[80];
-        char			*cp;
-        double		outer_limit			= 0.0;
-        int 			sys_no 				= 0;
-        int				has_known_planets 	= FALSE;
-        planet_pointer	seed_planets 		= NULL;
-        int				use_seed_system		= FALSE;
-        int				in_celestia 		= 0;
+        String system_name;
+        double outer_limit = 0.0;
+        int sys_no = 0;
+        PlanetObj seed_planets = null;
 
         init();
 
-        if (do_catalog || sys_no_arg)
-        {
-        if (sys_no_arg)
-        sys_no = sys_no_arg - 1;
-        else
-        {
-        if (index >= catalog_count)
-        sys_no = ((index - 1) % (catalog_count - 1)) + 1 ;
-        else
-        sys_no = index;
+        if (sys_name_arg != null) {
+            system_name = String.format("%s", sys_name_arg);
+        } else {
+            system_name = String.format("Unknown System %ld-%LG", flag_seed, sun.mass);
         }
 
-        if ((*(cat_arg->stars))[sys_no].known_planets != NULL)
-        has_known_planets = TRUE;
-
-        if (use_known_planets || no_generate)
-        {
-        seed_planets = (*(cat_arg->stars))[sys_no].known_planets;
-
-        use_seed_system	= no_generate;
-        }
-        else
-        {
-        seed_planets = NULL;
-        }
-
-        in_celestia = (*(cat_arg->stars))[sys_no].in_celestia;
-
-        sun.mass = (*(cat_arg->stars))[sys_no].mass;
-        sun.luminosity = (*(cat_arg->stars))[sys_no].luminosity;
-
-        if (do_catalog || sys_name_arg[0] == '\0')
-        {
-        sprintf (&system_name[0], "%s", (*(cat_arg->stars))[sys_no].name);
-        sprintf (&designation[0], "%s", (*(cat_arg->stars))[sys_no].desig);
-
-        }
-        else
-        {
-        sprintf (&system_name[0], "%s", sys_name_arg);
-        sprintf (&designation[0], "%s", sys_name_arg);
-        }
-
-        sprintf (&file_name[0], "%s-%ld", designation, flag_seed);
-
-        if ((*(cat_arg->stars))[sys_no].m2 > .001)
-        {
-				/*
-				 *	The following is Holman & Wiegert's equation 1 from
-				 *	Long-Term Stability of Planets in Binary Systems
-				 *	The Astronomical Journal, 117:621-628, Jan 1999
-				 */
-        double m1 = sun.mass;
-        double m2 = (*(cat_arg->stars))[sys_no].m2;
-        double mu = m2 / (m1 + m2);
-        double e = (*(cat_arg->stars))[sys_no].e;
-        double a = (*(cat_arg->stars))[sys_no].a;
-
-        outer_limit = (0.464 + (-0.380 * mu) + (-0.631 * e) +
-        (0.586 * mu * e) + (0.150 * pow2(e)) +
-        (-0.198 * mu * pow2(e))) * a;
-        }
-        else
-        outer_limit = 0.0;
-        }
-        else if (reuse_solar_system)
-        {
-        sprintf (&system_name[0], "Earth-M%LG", earth.mass * SUN_MASS_IN_EARTH_MASSES);
-        sprintf (&designation[0], "Earth-M%LG", earth.mass * SUN_MASS_IN_EARTH_MASSES);
-        sprintf (&file_name[0], "Earth-M%LG", earth.mass * SUN_MASS_IN_EARTH_MASSES);
-
-        outer_limit = 0.0;
-        }
-        else
-        {
-        if (sys_name_arg[0])
-        {
-        sprintf (&system_name[0], "%s", sys_name_arg);
-        sprintf (&designation[0], "%s", sys_name_arg);
-        }
-        else
-        {
-        sprintf (&system_name[0], "%s %ld-%LG", prognam, flag_seed, sun.mass);
-        sprintf (&designation[0], "%s", prognam);
-        }
-
-        sprintf (&file_name[0], "%s-%ld-%LG", designation, flag_seed, sun.mass);
         outer_limit = 0;
-        }
+
 
         sun.name = system_name;
 
-        if ((flag_verbose & 0x0400) && (outer_limit > 0.0))
-        {
-        fprintf (sgErr, "%s, Outer Limit: %LG\n", system_name, outer_limit);
-        }
+        earthlike = 0;
+        habitable = 0;
+        habitable_jovians = 0;
 
-        if ((system_count == 1) && (strlen(filename_arg) > 0))
-        strcpy(file_name, filename_arg);
-
-        while ((cp = strchr(file_name,' ')) != 0)
-        *cp = '-';
-
-        while ((cp = strchr(file_name,'\'')) != 0)
-        *cp = '-';
-
-        earthlike			 = 0;
-        habitable			 = 0;
-        habitable_jovians	 = 0;
-
-        if (reuse_solar_system)
-        {
-        seed_planets	= solar_system;
-        use_seed_system	= TRUE;
-        }
-        else if (use_solar_system)
-        {
-        if  (index == 0)
-        {
-        seed_planets	= solar_system;
-        use_seed_system	= TRUE;
-        }
-        else
-        {
-        use_seed_system	= FALSE;
-
-        if (!use_known_planets)
-        seed_planets = NULL;
-        }
-        }
-
-        {
-        int	i;
-
-        for (i = 0; i < 12; i++)
-        type_counts[i] = 0;
+        for (int i = 0; i < 12; i++)
+            type_counts[i] = 0;
 
         type_count = 0;
-        }
 
-        generate_stellar_system(&sun,
-        use_seed_system,
-        seed_planets,	// solar_system
-        flag_char,
-        sys_no,
-        system_name,
-        outer_limit,
-        do_gases,
-        do_moons);
 
-        {
-        planet_pointer	planet;
-        int 			counter;
-        int				wt_type_count = type_count;
-        int				norm_type_count = 0;
+        sun = generate_stellar_system(sun,
+                seed_planets,    // solar_system
+                system_name,
+                outer_limit,
+                do_gases,
+                do_moons);
 
-        if (type_counts[3]  > 0)	wt_type_count += 20;	// Terrestrial
-        if (type_counts[8]  > 0)	wt_type_count += 18;	// Water
-        if (type_counts[2]  > 0)	wt_type_count += 16;	// Venusian
-        if (type_counts[7]  > 0)	wt_type_count += 15;	// Martian
-        if (type_counts[9]  > 0)	wt_type_count += 14;	// Ice
-        if (type_counts[10] > 0)	wt_type_count += 13;	// Asteroids
-        if (type_counts[4]  > 0)	wt_type_count += 12;	// Gas Dwarf
-        if (type_counts[5]  > 0)	wt_type_count += 11;	// Sub_Jovian
-        if (type_counts[11] > 0)	wt_type_count += 10;	// 1-Face
-        if (type_counts[1]  > 0)	wt_type_count += 3;		// Rock
-        if (type_counts[6]  > 0)	wt_type_count += 2;		// Jovian
-        if (type_counts[0]  > 0)	wt_type_count += 1;		// Unknown
 
-        for (planet=innermost_planet, counter=0;
-        planet != NULL;
-        planet=planet->next_planet, counter++)
-        ;
+        PlanetObj planet;
+        int counter;
+        int wt_type_count = type_count;
+        int norm_type_count = 0;
+
+        if (type_counts[3] > 0) wt_type_count += 20;    // Terrestrial
+        if (type_counts[8] > 0) wt_type_count += 18;    // Water
+        if (type_counts[2] > 0) wt_type_count += 16;    // Venusian
+        if (type_counts[7] > 0) wt_type_count += 15;    // Martian
+        if (type_counts[9] > 0) wt_type_count += 14;    // Ice
+        if (type_counts[10] > 0) wt_type_count += 13;    // Asteroids
+        if (type_counts[4] > 0) wt_type_count += 12;    // Gas Dwarf
+        if (type_counts[5] > 0) wt_type_count += 11;    // Sub_Jovian
+        if (type_counts[11] > 0) wt_type_count += 10;    // 1-Face
+        if (type_counts[1] > 0) wt_type_count += 3;        // Rock
+        if (type_counts[6] > 0) wt_type_count += 2;        // Jovian
+        if (type_counts[0] > 0) wt_type_count += 1;        // Unknown
+
+        for (planet = innermost_planet, counter = 0;
+             planet != null;
+             planet = planet.next_planet, counter++)
+            ;
 
         norm_type_count = wt_type_count - (counter - type_count);
 
-        if (max_type_count < norm_type_count)
-        {
-        max_type_count = norm_type_count;
+        if (max_type_count < norm_type_count) {
+            max_type_count = norm_type_count;
+        }
 
-        if (flag_verbose & 0x10000)
-        fprintf (sgErr, "System %ld - %s (-s%ld -%c%d) has %d types out of %d planets. [%d]\n",
-        flag_seed,
-        system_name,
-        flag_seed,
-        flag_char,
-        sys_no,
-        type_count,
-        counter,
-        norm_type_count);
-        }
-        }
 
         total_habitable += habitable;
         total_earthlike += earthlike;
 
-        if ((!(only_habitable || only_multi_habitable || only_jovian_habitable || only_earthlike))
-        || (only_habitable && (habitable > 0))
-        || (only_multi_habitable && (habitable > 1))
-        || (only_jovian_habitable && (habitable_jovians > 0))
-        || (only_earthlike && (earthlike > 0))
-        )
-        {
-        char	system_url[300] = "";
-        char	svg_url[300]	= "";
+        sun.planets = new ArrayList<PlanetObj>();
+        PlanetObj curPlanet = innermost_planet;
+        counter = 1;
+        while (curPlanet != null) {
+            sun.planets.add(curPlanet);
+            curPlanet.planetName = sun.name + "-" + Integer.toString(counter++);
 
-        if (sgOut == NULL)
-        {
-        sprintf (system_url,
-        "%s%s%s%s",
-        url_path,
-        subdir,
-        file_name,
-        ".html");
+            // listify the moons
+            if (curPlanet.first_moon != null) {
+                int moonCounter = 1;
+                curPlanet.moonList = new ArrayList<PlanetObj>();
+                PlanetObj curMoon = curPlanet.first_moon;
+                 while (curMoon != null) {
+                     curPlanet.moonList.add(curMoon);
+                     curMoon.planetName = curPlanet.planetName + " moon " + Integer.toString(moonCounter++);
+                     curMoon = curMoon.next_planet;
+                 }
+            }
 
-        sprintf (svg_url,
-        "%s%s%s%s",
-        url_path,
-        subdir,
-        file_name,
-        ".svg");
-        }
-        else
-        {
-
-        sprintf (system_url,
-        "/cgi-bin/StarGen.pl?Catalog=%s&Dole=%d&SolStation=%d&Mass=%LG&Output=all&Seed=%ld&Count=1&Incr=1&Gas=%s&Moon=%s&SVG=%s",
-        (cat_arg == NULL) ? "none" : cat_arg->arg,
-        sys_no,
-        sys_no,
-        sun.mass,
-        flag_seed,
-        (do_gases)					? "on" : "off",	// one of ("on", "off")
-        (do_moons)					? "on" : "off",	// one of ("on", "off")
-        (graphic_format == gfSVG)	? "on" : "off"	// one of ("on", "off")
-        );
-
-        sprintf (svg_url,
-        "/cgi-bin/StarGen.pl?Catalog=%s&Dole=%d&SolStation=%d&Mass=%LG&Output=all&Seed=%ld&Count=1&Incr=1&Gas=%s&Moon=%s&SVG=%s&DoIt=SVG",
-        (cat_arg == NULL) ? "none" : cat_arg->arg,
-        sys_no,
-        sys_no,
-        sun.mass,
-        flag_seed,
-        (do_gases)					? "on" : "off",	// one of ("on", "off")
-        (do_moons)					? "on" : "off",	// one of ("on", "off")
-        (graphic_format == gfSVG)	? "on" : "off"	// one of ("on", "off")
-        );
+            curPlanet = curPlanet.next_planet;
         }
 
-        switch (out_format)
-        {
-        case ffSVG:
-        create_svg_file (sgOut, innermost_planet, path, file_name, ".svg", prognam);
-        break;
+        // fill in some quick stats
+        sun.earthlike = earthlike;
+        sun.habitable = habitable;
+        sun.habitable_jovians = habitable_jovians;
 
-        case ffHTML:
-        if ((graphic_format == gfSVG) && (sgOut == NULL))
-        {
-        create_svg_file (NULL, innermost_planet, path, file_name, ".svg", prognam);
-        }
-
-        if (thumbnails != NULL)
-        html_thumbnails(innermost_planet, thumbnails,
-        system_name,
-        url_path, system_url, svg_url, file_name,
-        FALSE, TRUE, FALSE, do_moons, graphic_format);
-
-        if ((system_count == 1) || (sgOut == NULL))
-        {
-        if ((system_count == 1) && (sgOut != NULL))
-        html_file = open_html_file (system_name, flag_seed, path, url_path, file_name, ".html",
-        prognam, sgOut);
-        else
-        html_file = open_html_file (system_name, flag_seed, path, url_path, file_name, ".html",
-        prognam, NULL);
-
-        if (NULL != html_file)
-        {
-        html_thumbnails(innermost_planet, html_file,
-        system_name,
-        url_path, system_url, svg_url, file_name,
-        TRUE, FALSE, TRUE, do_moons, graphic_format);
-        html_describe_system(innermost_planet, do_gases, url_path, html_file);
-        close_html_file(html_file);
-        }
-        else
-        {
-        fprintf(sgErr, "Could not open file %s%s%s\n",
-        path, file_name, ".html");
-        exit(0);
-        }
-        }
-        break;
-
-        case ffTEXT:
-        text_describe_system(innermost_planet, do_gases, flag_seed);
-        break;
-
-        case ffCSV:
-        case ffCSVdl:
-        if (csv_file != NULL)
-        csv_describe_system(csv_file, innermost_planet, do_gases, flag_seed);
-        break;
-
-        case ffCELESTIA:
-        if (in_celestia != 0)
-        {
-        if (has_known_planets && !use_known_planets)
-        fprintf (sgErr, "Skipping %s -- Has planets in Celestia already\n",
-        designation);
-        else
-        celestia_describe_system(innermost_planet, designation);
-        }
-        break;
-        }
-        if ((habitable > 1) &&
-        (flag_verbose & 0x0001))
-        fprintf (sgErr, "System %ld - %s (-s%ld -%c%d) has %d planets with breathable atmospheres.\n",
-        flag_seed,
-        system_name,
-        flag_seed,
-        flag_char,
-        sys_no,
-        habitable);
-        }
-
-        if (! ((use_solar_system) && (index == 0)))
-        flag_seed += seed_increment;
-
-        if (reuse_solar_system)
-        earth.mass += (EM(inc_mass));
-
-        free_atmosphere (innermost_planet);
-
-        // Free the dust and planets created by accrete:
-        free_generations ();
-        }
-
-        if ((flag_verbose & 0x0001) || (flag_verbose & 0x0002))
-        {
-        fprintf (sgErr, "Earthlike planets: %d\n", total_earthlike);
-        fprintf (sgErr, "Breathable atmospheres: %d\n", total_habitable);
-        fprintf (sgErr, "Breathable g range: %4.2Lf -  %4.2Lf\n",
-        min_breathable_g,
-        max_breathable_g);
-        fprintf (sgErr, "Terrestrial g range: %4.2Lf -  %4.2Lf\n",
-        min_breathable_terrestrial_g,
-        max_breathable_terrestrial_g);
-        fprintf (sgErr, "Breathable pressure range: %4.2Lf -  %4.2Lf\n",
-        min_breathable_p,
-        max_breathable_p);
-        fprintf (sgErr, "Breathable temp range: %+.1Lf C -  %+.1Lf C\n",
-        min_breathable_temp - EARTH_AVERAGE_KELVIN,
-        max_breathable_temp - EARTH_AVERAGE_KELVIN);
-        fprintf (sgErr, "Breathable illumination range: %4.2Lf -  %4.2Lf\n",
-        min_breathable_l,
-        max_breathable_l);
-        fprintf (sgErr, "Terrestrial illumination range: %4.2Lf -  %4.2Lf\n",
-        min_breathable_terrestrial_l,
-        max_breathable_terrestrial_l);
-        fprintf (sgErr, "Max moon mass: %4.2Lf\n",
-        max_moon_mass * SUN_MASS_IN_EARTH_MASSES);
-        }
-
-        if (system_count > 1)
-        {
-        if (do_gases)
-        html_thumbnail_totals(thumbnails);
-
-        close_html_file(thumbnails);
-        }
-        if (csv_file != NULL)
-        {
-        fflush (csv_file);
-        fclose (csv_file);
-        }
-
-        return(0);
-        }
+        return sun;
+    }
 }

@@ -3,7 +3,6 @@ package com.eweware.phabrik.sim;
 import com.eweware.phabrik.obj.PlanetObj;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by Dave on 9/2/2016.
@@ -15,30 +14,29 @@ public class Accrete {
     double		reduced_mass;
     double		dust_density;
     double		cloud_eccentricity;
-    List<DustRecord> dustList	= null;
-    PlanetObj   curPlanet = null;
-    List<Gen>		histList	= null;
+    DustRecord dust_head	= null;
+    PlanetObj planet_head = null;
+    Gen		hist_head	= null;
 
     void set_initial_conditions(double inner_limit_of_dust,
                                 double outer_limit_of_dust)
     {
         Gen hist;
         hist = new Gen();
-        hist.dusts = dustList;
-        hist.firstPlanet = curPlanet;
-        histList = new ArrayList<Gen>();
-        hist.nextList = histList;
+        hist.dusts = dust_head;
+        hist.planets = planet_head;
+        hist.next = hist_head;
+        hist_head = hist;
 
-        dustList = new ArrayList<DustRecord>();
+        dust_head = new DustRecord();
+        planet_head = null;
 
-        DustRecord firstDust = new DustRecord();
-        firstDust.outer_edge = outer_limit_of_dust;
-        firstDust.inner_edge = inner_limit_of_dust;
-        firstDust.dust_present = true;
-        firstDust.gas_present = true;
+        dust_head.next_band = null;
+        dust_head.outer_edge = outer_limit_of_dust;
+        dust_head.inner_edge = inner_limit_of_dust;
+        dust_head.dust_present = true;
+        dust_head.gas_present = true;
         dust_left = true;
-        dustList.add(firstDust);
-        firstDust.nextList = dustList;
         cloud_eccentricity = 0.2;
     }
 
@@ -69,19 +67,22 @@ public class Accrete {
 
     boolean dust_available(double inside_range, double outside_range)
     {
-        boolean dust_here = false;
+        DustRecord current_dust_band;
+        boolean dust_here;
 
-        for (DustRecord curDust : dustList) {
-            if ((curDust.outer_edge >= inside_range) &&
-                    (curDust.inner_edge >= outside_range) &&
-                    curDust.dust_present)
-            {
-                dust_here = true;
-                break;
-            }
+        current_dust_band = dust_head;
+        while ((current_dust_band != null)
+                && (current_dust_band.outer_edge < inside_range))
+            current_dust_band = current_dust_band.next_band;
+        if (current_dust_band == null)
+            dust_here = false;
+        else dust_here = current_dust_band.dust_present;
+        while ((current_dust_band != null)
+                && (current_dust_band.inner_edge < outside_range)) {
+            dust_here = dust_here || current_dust_band.dust_present;
+            current_dust_band = current_dust_band.next_band;
         }
-
-        return dust_here;
+        return(dust_here);
     }
 
     void update_dust_lanes(double min, double max, double mass,
@@ -89,6 +90,7 @@ public class Accrete {
                            double body_outer_bound)
     {
         boolean 	gas;
+        DustRecord node1;
         DustRecord	node2;
         DustRecord	node3;
 
@@ -99,15 +101,15 @@ public class Accrete {
             gas = true;
 
         int curIndex = 0;
-        DustRecord curDust = dustList.get(curIndex);
+        node1 = dust_head;
 
-        while (curDust != null) {
-            if (((curDust.inner_edge < min) && (curDust.outer_edge > max)))
+        while (node1 != null) {
+            if (((node1.inner_edge < min) && (node1.outer_edge > max)))
             {
                 node2 = new DustRecord();
                 node2.inner_edge = min;
                 node2.outer_edge = max;
-                if ((curDust.gas_present == true))
+                if ((node1.gas_present == true))
                     node2.gas_present = gas;
                 else
                     node2.gas_present = false;
@@ -115,94 +117,78 @@ public class Accrete {
 
                 node3 = new DustRecord();
                 node3.inner_edge = max;
-                node3.outer_edge = curDust.outer_edge;
-                node3.gas_present = curDust.gas_present;
-                node3.dust_present = curDust.dust_present;
-                curDust.outer_edge = min;
-                dustList.add(curIndex + 1, node2);
-                dustList.add(curIndex + 2, node3);
-                curIndex += 3;
-                if (curIndex < dustList.size())
-                    curDust = dustList.get(curIndex);
-                else
-                    curDust = null;
-            } else if (((curDust.inner_edge < max) && (curDust.outer_edge > max)))
+                node3.outer_edge = node1.outer_edge;
+                node3.gas_present = node1.gas_present;
+                node3.dust_present = node1.dust_present;
+                node1.outer_edge = min;
+                node3.next_band = node1.next_band;
+                node1.next_band = node2;
+                node2.next_band = node3;
+                node1 = node3.next_band;
+
+            } else if (((node1.inner_edge < max) && (node1.outer_edge > max)))
             {
                 node2 = new DustRecord();
-                node2.dust_present = curDust.dust_present;
-                node2.gas_present = curDust.gas_present;
-                node2.outer_edge = curDust.outer_edge;
+                node2.dust_present = node1.dust_present;
+                node2.gas_present = node1.gas_present;
+                node2.outer_edge = node1.outer_edge;
                 node2.inner_edge = max;
-                curDust.outer_edge = max;
-                if ((curDust.gas_present == true))
-                    curDust.gas_present = gas;
+                node1.outer_edge = max;
+                if ((node1.gas_present == true))
+                    node1.gas_present = gas;
                 else
-                    curDust.gas_present = false;
-                curDust.dust_present = false;
+                    node1.gas_present = false;
+                node1.dust_present = false;
 
-                dustList.add(curIndex + 1, node2);
-                curIndex += 2;
-                if (curIndex < dustList.size())
-                    curDust = dustList.get(curIndex);
-                else
-                    curDust = null;
-            } else if (((curDust.inner_edge < min) && (curDust.outer_edge > min))) {
+                node2.next_band = node1.next_band;
+                node1.next_band = node2;
+                node1 = node2.next_band;
+            } else if (((node1.inner_edge < min) && (node1.outer_edge > min))) {
                 node2 = new DustRecord();
 
                 node2.dust_present = false;
-                if ((curDust.gas_present == true))
+                if ((node1.gas_present == true))
                     node2.gas_present = gas;
                 else
                     node2.gas_present = false;
-                node2.outer_edge = curDust.outer_edge;
+                node2.outer_edge = node1.outer_edge;
                 node2.inner_edge = min;
-                curDust.outer_edge = min;
-                dustList.add(curIndex + 1, node2);
-                curIndex += 2;
-                if (curIndex < dustList.size())
-                    curDust = dustList.get(curIndex);
-                else
-                    curDust = null;
+                node1.outer_edge = min;
+                node2.next_band = node1.next_band;
+                node1.next_band = node2;
+                node1 = node2.next_band;
             }
-            else if (((curDust.inner_edge >= min) && (curDust.outer_edge <= max)))
+            else if (((node1.inner_edge >= min) && (node1.outer_edge <= max)))
             {
-                if ((curDust.gas_present == true))
-                    curDust.gas_present = gas;
-                curDust.dust_present = false;
-                curIndex++;
-                if (curIndex < dustList.size())
-                    curDust = dustList.get(curIndex);
-                else
-                    curDust = null;
-            } else if (((curDust.outer_edge < min) || (curDust.inner_edge > max))) {
-                curIndex++;
-                if (curIndex < dustList.size())
-                    curDust = dustList.get(curIndex);
-                else
-                    curDust = null;
+                if ((node1.gas_present == true))
+                    node1.gas_present = gas;
+                node1.dust_present = false;
+                node1 = node1.next_band;
+            } else if (((node1.outer_edge < min) || (node1.inner_edge > max))) {
+                node1 = node1.next_band;
             }
         }
 
 
 
-        curDust = dustList.get(0);
-        while ((curDust != null))
+        node1 = dust_head;
+        while ((node1 != null))
         {
-            if (((curDust.dust_present)
-                    && (((curDust.outer_edge >= body_inner_bound)
-                    && (curDust.inner_edge <= body_outer_bound)))))
+            if (((node1.dust_present)
+                    && (((node1.outer_edge >= body_inner_bound)
+                    && (node1.inner_edge <= body_outer_bound)))))
                 dust_left = true;
-            node2 = curDust.next();
+            node2 = node1.next_band;
             if ((node2 != null))
             {
-                if (((curDust.dust_present == node2.dust_present)
-                        && (curDust.gas_present == node2.gas_present)))
+                if (((node1.dust_present == node2.dust_present)
+                        && (node2.gas_present == node2.gas_present)))
                 {
-                    curDust.outer_edge = node2.outer_edge;
-                    dustList.remove(node2);
+                    node1.outer_edge = node2.outer_edge;
+                    node1.next_band = node2.next_band;
                 }
             }
-            curDust = curDust.next();
+            node1 = node1.next_band;
         }
     }
 
@@ -265,7 +251,7 @@ public class Accrete {
                     || (dust_band.inner_edge >= r_outer)))
             {
                 return(collect_dust(last_mass, new_dust, new_gas,
-                        a,e,crit_mass, dust_band.next()));
+                        a,e,crit_mass, dust_band.next_band));
             }
             else
             {
@@ -290,7 +276,7 @@ public class Accrete {
                 result.dust = new_mass - new_gas;
 
                 MassDustGasRecord nextData = collect_dust(last_mass, next_dust, next_gas,
-                    a,e,crit_mass, dust_band.next());
+                    a,e,crit_mass, dust_band.next_band);
 
                 result.gas  += nextData.gas;
                 result.dust += nextData.dust;
@@ -336,7 +322,7 @@ public class Accrete {
         {
             temp_mass = new_mass;
             MassDustGasRecord newVal = collect_dust(new_mass, new_dust, new_gas,
-                    a,e,crit_mass, dustList.get(0));
+                    a,e,crit_mass, dust_head);
             new_mass = newVal.mass;
             new_dust = newVal.dust;
             new_gas = newVal.gas;
@@ -375,7 +361,7 @@ public class Accrete {
 
 // First we try to find an existing planet with an over-lapping orbit.
 
-        for (the_planet = curPlanet;
+        for (the_planet = planet_head;
              the_planet != null;
              the_planet = the_planet.next_planet)
         {
@@ -519,8 +505,8 @@ public class Accrete {
                     {
                         next_planet = the_planet.next_planet;
 
-                        if (the_planet == curPlanet)
-                            curPlanet = next_planet;
+                        if (the_planet == planet_head)
+                            planet_head = next_planet;
                         else
                             prev_planet.next_planet = next_planet;
 
@@ -566,24 +552,24 @@ public class Accrete {
             else
                 the_planet.gas_giant = false;
 
-            if ((curPlanet == null))
+            if ((planet_head == null))
             {
-                curPlanet = the_planet;
+                planet_head = the_planet;
                 the_planet.next_planet = null;
             }
-            else if ((a < curPlanet.a))
+            else if ((a < planet_head.a))
             {
-                the_planet.next_planet = curPlanet;
-                curPlanet = the_planet;
+                the_planet.next_planet = planet_head;
+                planet_head = the_planet;
             }
-            else if ((curPlanet.next_planet == null))
+            else if ((planet_head.next_planet == null))
             {
-                curPlanet.next_planet = the_planet;
+                planet_head.next_planet = the_planet;
                 the_planet.next_planet = null;
             }
             else
             {
-                next_planet = curPlanet;
+                next_planet = planet_head;
                 while (((next_planet != null) && (next_planet.a < a)))
                 {
                     prev_planet = next_planet;
@@ -674,7 +660,7 @@ public class Accrete {
                 //fprintf (stderr, ".. failed.\n");
             }
         }
-        return curPlanet;
+        return planet_head;
     }
 
 

@@ -26,5 +26,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="PROVIDED" name="AppEngine Dev 1.9.38" level="application_server_libraries" />
     <orderEntry type="library" name="AppEngine API" level="project" />
+    <orderEntry type="library" name="joda-time:joda-time:2.9.4" level="project" />
+    <orderEntry type="library" name="com.google.code.gson:gson:2.7" level="project" />
   </component>
 </module>

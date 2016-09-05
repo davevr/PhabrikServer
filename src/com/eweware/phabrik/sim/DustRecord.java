@@ -10,14 +10,7 @@ public class DustRecord {
     public double       outer_edge;
     public Boolean          dust_present;
     public Boolean          gas_present;
-    public List<DustRecord> nextList;
+    public DustRecord       next_band;
 
-    public DustRecord next () {
-        int myLoc = nextList.indexOf(this);
-        myLoc++;
-        if (myLoc >= nextList.size())
-            return null;
-        else
-            return nextList.get(myLoc);
-    }
+
 }

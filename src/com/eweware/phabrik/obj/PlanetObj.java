@@ -1,5 +1,7 @@
 package com.eweware.phabrik.obj;
 
+import com.eweware.phabrik.sim.Gas;
+
 import java.util.List;
 
 /**
@@ -20,7 +22,13 @@ public class PlanetObj {
         tSubSubGasGiant,
         tAsteroids,
         t1Face
+    }
 
+    public enum breathabilty_type {
+        NONE,
+        BREATHABLE,
+        UNBREATHABLE,
+        POISONOUS
     }
     public long Id;
     public long systemId;
@@ -30,6 +38,7 @@ public class PlanetObj {
     public long ownerId;
 
     // planet specific stats
+    transient public SunObj   sun;
     public int			planet_no;
     public planet_type  planetType;
     public double a;					/* semi-major axis of solar orbit (in AU)*/
@@ -70,11 +79,30 @@ public class PlanetObj {
     public double	hydrosphere;		/* fraction of surface covered		 */
     public double	cloud_cover;		/* fraction of surface covered		 */
     public double	ice_cover;			/* fraction of surface covered		 */
-    public List<Long> atmosphere;      /* list of gasses in the atmosphere */
+    public int      gases;              /* # of gasses in the atmosphere */
+    public List<Gas> atmosphere;      /* list of gasses in the atmosphere */
     public long  planetTypeId;				/* Type code						 */
+    public boolean earthlike;
+    public boolean habitable;
+    public boolean habitable_jovian;
     public List<PlanetObj> moonList;        /* list of moons, if any */
-    public PlanetObj first_moon;
-    public PlanetObj next_planet;
-    public PlanetObj prev_planet;
+    transient public PlanetObj first_moon;
+    transient public PlanetObj next_planet;
+
+    public PlanetObj() {
+        // init one with all zeros
+    }
+
+    public PlanetObj(int theNum, double orbit, double ecc, double tilt, double themass, boolean isGass, double dustMass, double gassMass) {
+        planet_no = theNum;
+        a = orbit;
+        e = ecc;
+        axial_tilt = tilt;
+        mass = themass;
+        gas_giant = isGass;
+        dust_mass = dustMass;
+        gas_mass = gassMass;
+
+    }
 
 }
