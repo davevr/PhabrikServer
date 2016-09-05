@@ -4,13 +4,8 @@ package com.eweware.phabrik.sim;
  * Created by Dave on 9/2/2016.
  */
 public class Enviro {
-    #include	<stdio.h>
-    #include	<math.h>
-    #include	"const.h"
-            #include	"structs.h"
-            #include	"enviro.h"
-            #include	"stargen.h"
-            #include	"utils.h"
+
+    public enum breathability_constants
 
     char* breathability_phrase[4] =
     {

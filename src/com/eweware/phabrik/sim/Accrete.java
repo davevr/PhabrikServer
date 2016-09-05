@@ -2,273 +2,301 @@ package com.eweware.phabrik.sim;
 
 import com.eweware.phabrik.obj.PlanetObj;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by Dave on 9/2/2016.
  */
 public class Accrete {
-    int 			dust_left;
-    long double		r_inner;
-    long double		r_outer;
-    long double		reduced_mass;
-    long double		dust_density;
-    long double		cloud_eccentricity;
-    dust_pointer	dust_head	= NULL;
-    planet_pointer	planet_head	= NULL;
-    gen_pointer		hist_head	= NULL;
+    Boolean 	dust_left;
+    double		r_inner;
+    double		r_outer;
+    double		reduced_mass;
+    double		dust_density;
+    double		cloud_eccentricity;
+    List<DustRecord> dustList	= null;
+    PlanetObj   curPlanet = null;
+    List<Gen>		histList	= null;
 
-    void set_initial_conditions(long double inner_limit_of_dust,
-                                long double outer_limit_of_dust)
+    void set_initial_conditions(double inner_limit_of_dust,
+                                double outer_limit_of_dust)
     {
-        gen_pointer hist;
-        hist = (gen_pointer)malloc(sizeof(generation));
-        hist->dusts = dust_head;
-        hist->planets = planet_head;
-        hist->next = hist_head;
-        hist_head = hist;
+        Gen hist;
+        hist = new Gen();
+        hist.dusts = dustList;
+        hist.firstPlanet = curPlanet;
+        histList = new ArrayList<Gen>();
+        hist.nextList = histList;
 
-        dust_head = (dust *)malloc(sizeof(dust));
-        planet_head = NULL;
-        dust_head->next_band = NULL;
-        dust_head->outer_edge = outer_limit_of_dust;
-        dust_head->inner_edge = inner_limit_of_dust;
-        dust_head->dust_present = TRUE;
-        dust_head->gas_present = TRUE;
-        dust_left = TRUE;
+        dustList = new ArrayList<DustRecord>();
+
+        DustRecord firstDust = new DustRecord();
+        firstDust.outer_edge = outer_limit_of_dust;
+        firstDust.inner_edge = inner_limit_of_dust;
+        firstDust.dust_present = true;
+        firstDust.gas_present = true;
+        dust_left = true;
+        dustList.add(firstDust);
+        firstDust.nextList = dustList;
         cloud_eccentricity = 0.2;
     }
 
-    long double stellar_dust_limit(long double stell_mass_ratio)
+    double stellar_dust_limit(double stell_mass_ratio)
     {
-        return(200.0 * pow(stell_mass_ratio,(1.0 / 3.0)));
+        return(200.0 * Math.pow(stell_mass_ratio,(1.0 / 3.0)));
     }
 
-    long double nearest_planet(long double stell_mass_ratio)
+    double nearest_planet(double stell_mass_ratio)
     {
-        return(0.3 * pow(stell_mass_ratio,(1.0 / 3.0)));
+        return(0.3 * Math.pow(stell_mass_ratio,(1.0 / 3.0)));
     }
 
-    long double farthest_planet(long double stell_mass_ratio)
+    double farthest_planet(double stell_mass_ratio)
     {
-        return(50.0 * pow(stell_mass_ratio,(1.0 / 3.0)));
+        return(50.0 * Math.pow(stell_mass_ratio,(1.0 / 3.0)));
     }
 
-    long double inner_effect_limit(long double a, long double e, long double mass)
+    double inner_effect_limit(double a, double e, double mass)
     {
         return (a * (1.0 - e) * (1.0 - mass) / (1.0 + cloud_eccentricity));
     }
 
-    long double outer_effect_limit(long double a, long double e, long double mass)
+    double outer_effect_limit(double a, double e, double mass)
     {
         return (a * (1.0 + e) * (1.0 + mass) / (1.0 - cloud_eccentricity));
     }
 
-    int dust_available(long double inside_range, long double outside_range)
+    boolean dust_available(double inside_range, double outside_range)
     {
-        dust_pointer current_dust_band;
-        int dust_here;
+        boolean dust_here = false;
 
-        current_dust_band = dust_head;
-        while ((current_dust_band != NULL)
-                && (current_dust_band->outer_edge < inside_range))
-            current_dust_band = current_dust_band->next_band;
-        if (current_dust_band == NULL)
-            dust_here = FALSE;
-        else dust_here = current_dust_band->dust_present;
-        while ((current_dust_band != NULL)
-                && (current_dust_band->inner_edge < outside_range)) {
-            dust_here = dust_here || current_dust_band->dust_present;
-            current_dust_band = current_dust_band->next_band;
+        for (DustRecord curDust : dustList) {
+            if ((curDust.outer_edge >= inside_range) &&
+                    (curDust.inner_edge >= outside_range) &&
+                    curDust.dust_present)
+            {
+                dust_here = true;
+                break;
+            }
         }
-        return(dust_here);
+
+        return dust_here;
     }
 
-    void update_dust_lanes(long double min, long double max, long double mass,
-                           long double crit_mass, long double body_inner_bound,
-                           long double body_outer_bound)
+    void update_dust_lanes(double min, double max, double mass,
+                           double crit_mass, double body_inner_bound,
+                           double body_outer_bound)
     {
-        int 			gas;
-        dust_pointer	node1;
-        dust_pointer	node2;
-        dust_pointer	node3;
+        boolean 	gas;
+        DustRecord	node2;
+        DustRecord	node3;
 
-        dust_left = FALSE;
+        dust_left = false;
         if ((mass > crit_mass))
-            gas = FALSE;
+            gas = false;
         else
-            gas = TRUE;
-        node1 = dust_head;
-        while ((node1 != NULL))
-        {
-            if (((node1->inner_edge < min) && (node1->outer_edge > max)))
+            gas = true;
+
+        int curIndex = 0;
+        DustRecord curDust = dustList.get(curIndex);
+
+        while (curDust != null) {
+            if (((curDust.inner_edge < min) && (curDust.outer_edge > max)))
             {
-                node2 = (dust *)malloc(sizeof(dust));
-                node2->inner_edge = min;
-                node2->outer_edge = max;
-                if ((node1->gas_present == TRUE))
-                    node2->gas_present = gas;
+                node2 = new DustRecord();
+                node2.inner_edge = min;
+                node2.outer_edge = max;
+                if ((curDust.gas_present == true))
+                    node2.gas_present = gas;
                 else
-                    node2->gas_present = FALSE;
-                node2->dust_present = FALSE;
-                node3 = (dust *)malloc(sizeof(dust));
-                node3->inner_edge = max;
-                node3->outer_edge = node1->outer_edge;
-                node3->gas_present = node1->gas_present;
-                node3->dust_present = node1->dust_present;
-                node3->next_band = node1->next_band;
-                node1->next_band = node2;
-                node2->next_band = node3;
-                node1->outer_edge = min;
-                node1 = node3->next_band;
-            }
-            else
-            if (((node1->inner_edge < max) && (node1->outer_edge > max)))
-            {
-                node2 = (dust *)malloc(sizeof(dust));
-                node2->next_band = node1->next_band;
-                node2->dust_present = node1->dust_present;
-                node2->gas_present = node1->gas_present;
-                node2->outer_edge = node1->outer_edge;
-                node2->inner_edge = max;
-                node1->next_band = node2;
-                node1->outer_edge = max;
-                if ((node1->gas_present == TRUE))
-                    node1->gas_present = gas;
+                    node2.gas_present = false;
+                node2.dust_present = false;
+
+                node3 = new DustRecord();
+                node3.inner_edge = max;
+                node3.outer_edge = curDust.outer_edge;
+                node3.gas_present = curDust.gas_present;
+                node3.dust_present = curDust.dust_present;
+                curDust.outer_edge = min;
+                dustList.add(curIndex + 1, node2);
+                dustList.add(curIndex + 2, node3);
+                curIndex += 3;
+                if (curIndex < dustList.size())
+                    curDust = dustList.get(curIndex);
                 else
-                    node1->gas_present = FALSE;
-                node1->dust_present = FALSE;
-                node1 = node2->next_band;
-            }
-            else
-            if (((node1->inner_edge < min) && (node1->outer_edge > min)))
+                    curDust = null;
+            } else if (((curDust.inner_edge < max) && (curDust.outer_edge > max)))
             {
-                node2 = (dust *)malloc(sizeof(dust));
-                node2->next_band = node1->next_band;
-                node2->dust_present = FALSE;
-                if ((node1->gas_present == TRUE))
-                    node2->gas_present = gas;
+                node2 = new DustRecord();
+                node2.dust_present = curDust.dust_present;
+                node2.gas_present = curDust.gas_present;
+                node2.outer_edge = curDust.outer_edge;
+                node2.inner_edge = max;
+                curDust.outer_edge = max;
+                if ((curDust.gas_present == true))
+                    curDust.gas_present = gas;
                 else
-                    node2->gas_present = FALSE;
-                node2->outer_edge = node1->outer_edge;
-                node2->inner_edge = min;
-                node1->next_band = node2;
-                node1->outer_edge = min;
-                node1 = node2->next_band;
+                    curDust.gas_present = false;
+                curDust.dust_present = false;
+
+                dustList.add(curIndex + 1, node2);
+                curIndex += 2;
+                if (curIndex < dustList.size())
+                    curDust = dustList.get(curIndex);
+                else
+                    curDust = null;
+            } else if (((curDust.inner_edge < min) && (curDust.outer_edge > min))) {
+                node2 = new DustRecord();
+
+                node2.dust_present = false;
+                if ((curDust.gas_present == true))
+                    node2.gas_present = gas;
+                else
+                    node2.gas_present = false;
+                node2.outer_edge = curDust.outer_edge;
+                node2.inner_edge = min;
+                curDust.outer_edge = min;
+                dustList.add(curIndex + 1, node2);
+                curIndex += 2;
+                if (curIndex < dustList.size())
+                    curDust = dustList.get(curIndex);
+                else
+                    curDust = null;
             }
-            else
-            if (((node1->inner_edge >= min) && (node1->outer_edge <= max)))
+            else if (((curDust.inner_edge >= min) && (curDust.outer_edge <= max)))
             {
-                if ((node1->gas_present == TRUE))
-                    node1->gas_present = gas;
-                node1->dust_present = FALSE;
-                node1 = node1->next_band;
+                if ((curDust.gas_present == true))
+                    curDust.gas_present = gas;
+                curDust.dust_present = false;
+                curIndex++;
+                if (curIndex < dustList.size())
+                    curDust = dustList.get(curIndex);
+                else
+                    curDust = null;
+            } else if (((curDust.outer_edge < min) || (curDust.inner_edge > max))) {
+                curIndex++;
+                if (curIndex < dustList.size())
+                    curDust = dustList.get(curIndex);
+                else
+                    curDust = null;
             }
-            else
-            if (((node1->outer_edge < min) || (node1->inner_edge > max)))
-                node1 = node1->next_band;
         }
-        node1 = dust_head;
-        while ((node1 != NULL))
+
+
+
+        curDust = dustList.get(0);
+        while ((curDust != null))
         {
-            if (((node1->dust_present)
-                    && (((node1->outer_edge >= body_inner_bound)
-                    && (node1->inner_edge <= body_outer_bound)))))
-                dust_left = TRUE;
-            node2 = node1->next_band;
-            if ((node2 != NULL))
+            if (((curDust.dust_present)
+                    && (((curDust.outer_edge >= body_inner_bound)
+                    && (curDust.inner_edge <= body_outer_bound)))))
+                dust_left = true;
+            node2 = curDust.next();
+            if ((node2 != null))
             {
-                if (((node1->dust_present == node2->dust_present)
-                        && (node1->gas_present == node2->gas_present)))
+                if (((curDust.dust_present == node2.dust_present)
+                        && (curDust.gas_present == node2.gas_present)))
                 {
-                    node1->outer_edge = node2->outer_edge;
-                    node1->next_band = node2->next_band;
-                    free(node2);
+                    curDust.outer_edge = node2.outer_edge;
+                    dustList.remove(node2);
                 }
             }
-            node1 = node1->next_band;
+            curDust = curDust.next();
         }
     }
 
-    long double collect_dust(long double last_mass, long double *new_dust,
-                             long double *new_gas,
-                             long double a, long double e,
-                             long double crit_mass, dust_pointer dust_band)
-    {
-        long double	mass_density;
-        long double	temp1;
-        long double	temp2;
-        long double	temp;
-        long double	temp_density;
-        long double	bandwidth;
-        long double	width;
-        long double	volume;
-        long double	gas_density = 0.0;
-        long double	new_mass;
-        long double	next_mass;
-        long double	next_dust = 0;
-        long double	next_gas = 0;
+    class MassDustGasRecord {
+        double dust;
+        double gas;
+        double mass;
+    }
 
+    MassDustGasRecord collect_dust(double last_mass, double new_dust,
+                                   double new_gas,
+                                   double a, double e,
+                                   double crit_mass, DustRecord dust_band)
+    {
+        double	mass_density;
+        double	temp1;
+        double	temp2;
+        double	temp;
+        double	temp_density;
+        double	bandwidth;
+        double	width;
+        double	volume;
+        double	gas_density = 0.0;
+        double	new_mass;
+        double	next_dust = 0;
+        double	next_gas = 0;
+        MassDustGasRecord result = new MassDustGasRecord();
+
+        result.mass = 0;
+        result.dust = new_dust;
+        result.gas = new_gas;
 
         temp = last_mass / (1.0 + last_mass);
-        reduced_mass = pow(temp,(1.0 / 4.0));
+        reduced_mass = Math.pow(temp,(1.0 / 4.0));
         r_inner = inner_effect_limit(a, e, reduced_mass);
         r_outer = outer_effect_limit(a, e, reduced_mass);
 
         if ((r_inner < 0.0))
             r_inner = 0.0;
 
-        if ((dust_band == NULL))
-            return(0.0);
+        if ((dust_band == null))
+            return result;
         else
         {
-            if ((dust_band->dust_present == FALSE))
+            if ((dust_band.dust_present == false))
                 temp_density = 0.0;
             else
                 temp_density = dust_density;
 
-            if (((last_mass < crit_mass) || (dust_band->gas_present == FALSE)))
+            if (((last_mass < crit_mass) || (dust_band.gas_present == false)))
                 mass_density = temp_density;
             else
             {
-                mass_density = K * temp_density / (1.0 + sqrt(crit_mass / last_mass)
-                        * (K - 1.0));
+                mass_density = Constants.K * temp_density / (1.0 + Math.sqrt(crit_mass / last_mass)
+                        * (Constants.K - 1.0));
                 gas_density = mass_density - temp_density;
             }
 
-            if (((dust_band->outer_edge <= r_inner)
-                    || (dust_band->inner_edge >= r_outer)))
+            if (((dust_band.outer_edge <= r_inner)
+                    || (dust_band.inner_edge >= r_outer)))
             {
                 return(collect_dust(last_mass, new_dust, new_gas,
-                        a,e,crit_mass, dust_band->next_band));
+                        a,e,crit_mass, dust_band.next()));
             }
             else
             {
                 bandwidth = (r_outer - r_inner);
 
-                temp1 = r_outer - dust_band->outer_edge;
+                temp1 = r_outer - dust_band.outer_edge;
                 if (temp1 < 0.0)
                     temp1 = 0.0;
                 width = bandwidth - temp1;
 
-                temp2 = dust_band->inner_edge - r_inner;
+                temp2 = dust_band.inner_edge - r_inner;
                 if (temp2 < 0.0)
                     temp2 = 0.0;
                 width = width - temp2;
 
-                temp = 4.0 * PI * pow(a,2.0) * reduced_mass
+                temp = 4.0 * Math.PI * Math.pow(a,2.0) * reduced_mass
                         * (1.0 - e * (temp1 - temp2) / bandwidth);
                 volume = temp * width;
 
                 new_mass  = volume * mass_density;
-                *new_gas  = volume * gas_density;
-                *new_dust = new_mass - *new_gas;
+                result.gas  = volume * gas_density;
+                result.dust = new_mass - new_gas;
 
-                next_mass = collect_dust(last_mass, &next_dust, &next_gas,
-                    a,e,crit_mass, dust_band->next_band);
+                MassDustGasRecord nextData = collect_dust(last_mass, next_dust, next_gas,
+                    a,e,crit_mass, dust_band.next());
 
-                *new_gas  = *new_gas + next_gas;
-                *new_dust = *new_dust + next_dust;
+                result.gas  += nextData.gas;
+                result.dust += nextData.dust;
+                result.mass = new_mass + nextData.mass;
 
-                return(new_mass + next_mass);
+                return result;
             }
         }
     }
@@ -281,232 +309,228 @@ public class Accrete {
 /*	in units of solar masses.												*/
 /*--------------------------------------------------------------------------*/
 
-    long double critical_limit(long double orb_radius, long double eccentricity,
-                               long double stell_luminosity_ratio)
+    double critical_limit(double orb_radius, double eccentricity,
+                               double stell_luminosity_ratio)
     {
-        long double	temp;
-        long double	perihelion_dist;
+        double	temp;
+        double	perihelion_dist;
 
         perihelion_dist = (orb_radius - orb_radius * eccentricity);
-        temp = perihelion_dist * sqrt(stell_luminosity_ratio);
-        return(B * pow(temp,-0.75));
+        temp = perihelion_dist * Math.sqrt(stell_luminosity_ratio);
+        return(Constants.B * Math.pow(temp,-0.75));
     }
 
 
 
-    void accrete_dust(long double *seed_mass, long double *new_dust, long double *new_gas,
-                      long double a, long double e, long double crit_mass,
-                      long double body_inner_bound, long double body_outer_bound)
+
+    MassDustGasRecord accrete_dust(double seed_mass, double new_dust, double new_gas,
+                      double a, double e, double crit_mass,
+                      double body_inner_bound, double body_outer_bound)
     {
-        long double	new_mass = (*seed_mass);
-        long double	temp_mass;
+        double	new_mass = (seed_mass);
+        double	temp_mass;
+        MassDustGasRecord resultRec = new MassDustGasRecord();
+
 
         do
         {
             temp_mass = new_mass;
-            new_mass = collect_dust(new_mass, new_dust, new_gas,
-                    a,e,crit_mass, dust_head);
+            MassDustGasRecord newVal = collect_dust(new_mass, new_dust, new_gas,
+                    a,e,crit_mass, dustList.get(0));
+            new_mass = newVal.mass;
+            new_dust = newVal.dust;
+            new_gas = newVal.gas;
         }
         while (!(((new_mass - temp_mass) < (0.0001 * temp_mass))));
 
-        (*seed_mass) = (*seed_mass) + new_mass;
-        update_dust_lanes(r_inner,r_outer,(*seed_mass),crit_mass,body_inner_bound,body_outer_bound);
+        seed_mass = seed_mass + new_mass;
+        update_dust_lanes(r_inner,r_outer,seed_mass,crit_mass,body_inner_bound,body_outer_bound);
+
+        resultRec.mass =  seed_mass;
+        resultRec.dust = new_dust;
+        resultRec.gas = new_gas;
+
+        return resultRec;
     }
 
 
 
-    void coalesce_planetesimals(long double a, long double e, long double mass, long double crit_mass,
-                                long double dust_mass, long double gas_mass,
-                                long double stell_luminosity_ratio,
-                                long double body_inner_bound, long double body_outer_bound,
-                                int			do_moons)
+    void coalesce_planetesimals(double a, double e, double mass, double crit_mass,
+                                double dust_mass, double gas_mass,
+                                double stell_luminosity_ratio,
+                                double body_inner_bound, double body_outer_bound,
+                                boolean			do_moons)
     {
-        planet_pointer	the_planet;
-        planet_pointer	next_planet;
-        planet_pointer	prev_planet;
-        int 			finished;
-        long double 	temp;
-        long double 	diff;
-        long double 	dist1;
-        long double 	dist2;
+        PlanetObj	the_planet;
+        PlanetObj	next_planet;
+        PlanetObj	prev_planet;
+        boolean		finished;
+        double 	temp;
+        double 	diff;
+        double 	dist1;
+        double 	dist2;
 
-        finished = FALSE;
-        prev_planet = NULL;
+        finished = false;
+        prev_planet = null;
 
 // First we try to find an existing planet with an over-lapping orbit.
 
-        for (the_planet = planet_head;
-             the_planet != NULL;
-             the_planet = the_planet->next_planet)
+        for (the_planet = curPlanet;
+             the_planet != null;
+             the_planet = the_planet.next_planet)
         {
-            diff = the_planet->a - a;
+            diff = the_planet.a - a;
 
             if ((diff > 0.0))
             {
                 dist1 = (a * (1.0 + e) * (1.0 + reduced_mass)) - a;
 			/* x aphelion	 */
-                reduced_mass = pow((the_planet->mass / (1.0 + the_planet->mass)),(1.0 / 4.0));
-                dist2 = the_planet->a
-                        - (the_planet->a * (1.0 - the_planet->e) * (1.0 - reduced_mass));
+                reduced_mass = Math.pow((the_planet.mass / (1.0 + the_planet.mass)),(1.0 / 4.0));
+                dist2 = the_planet.a
+                        - (the_planet.a * (1.0 - the_planet.e) * (1.0 - reduced_mass));
             }
             else
             {
                 dist1 = a - (a * (1.0 - e) * (1.0 - reduced_mass));
 			/* x perihelion */
-                reduced_mass = pow((the_planet->mass / (1.0 + the_planet->mass)),(1.0 / 4.0));
-                dist2 = (the_planet->a * (1.0 + the_planet->e) * (1.0 + reduced_mass))
-                        - the_planet->a;
+                reduced_mass = Math.pow((the_planet.mass / (1.0 + the_planet.mass)),(1.0 / 4.0));
+                dist2 = (the_planet.a * (1.0 + the_planet.e) * (1.0 + reduced_mass))
+                        - the_planet.a;
             }
 
-            if (((fabs(diff) <= fabs(dist1)) || (fabs(diff) <= fabs(dist2))))
+            if (((Math.abs(diff) <= Math.abs(dist1)) || (Math.abs(diff) <= Math.abs(dist2))))
             {
-                long double new_dust = 0;
-                long double	new_gas = 0;
-                long double new_a = (the_planet->mass + mass) /
-                    ((the_planet->mass / the_planet->a) + (mass / a));
+                double new_dust = 0;
+                double	new_gas = 0;
+                double new_a = (the_planet.mass + mass) /
+                        ((the_planet.mass / the_planet.a) + (mass / a));
 
-                temp = the_planet->mass * sqrt(the_planet->a) * sqrt(1.0 - pow(the_planet->e,2.0));
-                temp = temp + (mass * sqrt(a) * sqrt(sqrt(1.0 - pow(e,2.0))));
-                temp = temp / ((the_planet->mass + mass) * sqrt(new_a));
-                temp = 1.0 - pow(temp,2.0);
+                temp = the_planet.mass * Math.sqrt(the_planet.a) * Math.sqrt(1.0 - Math.pow(the_planet.e,2.0));
+                temp = temp + (mass * Math.sqrt(a) * Math.sqrt(Math.sqrt(1.0 - Math.pow(e,2.0))));
+                temp = temp / ((the_planet.mass + mass) * Math.sqrt(new_a));
+                temp = 1.0 - Math.pow(temp,2.0);
                 if (((temp < 0.0) || (temp >= 1.0)))
                     temp = 0.0;
-                e = sqrt(temp);
+                e = Math.sqrt(temp);
 
                 if (do_moons)
                 {
-                    long double existing_mass = 0.0;
+                    double existing_mass = 0.0;
 
-                    if (the_planet->first_moon != NULL)
+                    if (the_planet.first_moon != null)
                     {
-                        planet_pointer	m;
+                        PlanetObj	m;
 
-                        for (m = the_planet->first_moon;
-                             m != NULL;
-                             m = m->next_planet)
+                        for (m = the_planet.first_moon;
+                             m != null;
+                             m = m.next_planet)
                         {
-                            existing_mass += m->mass;
+                            existing_mass += m.mass;
                         }
                     }
 
                     if (mass < crit_mass)
                     {
-                        if ((mass * SUN_MASS_IN_EARTH_MASSES) < 2.5
-                                && (mass * SUN_MASS_IN_EARTH_MASSES) > .0001
-                                && existing_mass < (the_planet->mass * .05)
+                        if ((mass * Constants.SUN_MASS_IN_EARTH_MASSES) < 2.5
+                                && (mass * Constants.SUN_MASS_IN_EARTH_MASSES) > .0001
+                                && existing_mass < (the_planet.mass * .05)
                                 )
                         {
-                            planet_pointer	the_moon = (planets *)malloc(sizeof(planets));
+                            PlanetObj	the_moon = new PlanetObj();
 
-                            the_moon->type 			= tUnknown;
-	/* 					the_moon->a 			= a; */
-	/* 					the_moon->e 			= e; */
-                            the_moon->mass 			= mass;
-                            the_moon->dust_mass 	= dust_mass;
-                            the_moon->gas_mass 		= gas_mass;
-                            the_moon->atmosphere 	= NULL;
-                            the_moon->next_planet 	= NULL;
-                            the_moon->first_moon 	= NULL;
-                            the_moon->gas_giant 	= FALSE;
-                            the_moon->atmosphere	= NULL;
-                            the_moon->albedo		= 0;
-                            the_moon->gases			= 0;
-                            the_moon->surf_temp		= 0;
-                            the_moon->high_temp		= 0;
-                            the_moon->low_temp		= 0;
-                            the_moon->max_temp		= 0;
-                            the_moon->min_temp		= 0;
-                            the_moon->greenhs_rise	= 0;
-                            the_moon->minor_moons 	= 0;
+                            the_moon.planetType 			= PlanetObj.planet_type.tUnknown;
+	/* 					the_moon.a 			= a; */
+	/* 					the_moon.e 			= e; */
+                            the_moon.mass 			= mass;
+                            the_moon.dust_mass 	= dust_mass;
+                            the_moon.gas_mass 		= gas_mass;
+                            the_moon.atmosphere 	= null;
+                            the_moon.next_planet 	= null;
+                            the_moon.first_moon 	= null;
+                            the_moon.gas_giant 	= false;
+                            the_moon.atmosphere	= null;
+                            the_moon.albedo		= 0;
+                            //todo the_moon.gases			= 0;
+                            the_moon.surf_temp		= 0;
+                            the_moon.high_temp		= 0;
+                            the_moon.low_temp		= 0;
+                            the_moon.max_temp		= 0;
+                            the_moon.min_temp		= 0;
+                            the_moon.greenhs_rise	= 0;
+                            //the_moon.minor_moons 	= 0;
 
-                            if ((the_moon->dust_mass + the_moon->gas_mass)
-                                    > (the_planet->dust_mass + the_planet->gas_mass))
+                            if ((the_moon.dust_mass + the_moon.gas_mass)
+                                    > (the_planet.dust_mass + the_planet.gas_mass))
                             {
-                                long double	temp_dust = the_planet->dust_mass;
-                                long double temp_gas  = the_planet->gas_mass;
-                                long double temp_mass = the_planet->mass;
+                                double	temp_dust = the_planet.dust_mass;
+                                double temp_gas  = the_planet.gas_mass;
+                                double temp_mass = the_planet.mass;
 
-                                the_planet->dust_mass = the_moon->dust_mass;
-                                the_planet->gas_mass  = the_moon->gas_mass;
-                                the_planet->mass      = the_moon->mass;
+                                the_planet.dust_mass = the_moon.dust_mass;
+                                the_planet.gas_mass  = the_moon.gas_mass;
+                                the_planet.mass      = the_moon.mass;
 
-                                the_moon->dust_mass   = temp_dust;
-                                the_moon->gas_mass    = temp_gas;
-                                the_moon->mass        = temp_mass;
+                                the_moon.dust_mass   = temp_dust;
+                                the_moon.gas_mass    = temp_gas;
+                                the_moon.mass        = temp_mass;
                             }
 
-                            if (the_planet->first_moon == NULL)
-                                the_planet->first_moon = the_moon;
+                            if (the_planet.first_moon == null)
+                                the_planet.first_moon = the_moon;
                             else
                             {
-                                the_moon->next_planet = the_planet->first_moon;
-                                the_planet->first_moon = the_moon;
+                                the_moon.next_planet = the_planet.first_moon;
+                                the_planet.first_moon = the_moon;
                             }
 
-                            finished = TRUE;
+                            finished = true;
 
-                            if (flag_verbose & 0x0100)
-                                fprintf (stderr, "Moon Captured... "
-                                        "%5.3Lf AU (%.2LfEM) <- %.2LfEM\n",
-                                        the_planet->a, the_planet->mass * SUN_MASS_IN_EARTH_MASSES,
-                                        mass * SUN_MASS_IN_EARTH_MASSES
-                                );
+                            // moon captured!
                         }
                         else
                         {
-                            if (flag_verbose & 0x0100)
-                                fprintf (stderr, "Moon Escapes... "
-                                        "%5.3Lf AU (%.2LfEM)%s %.2LfEM%s\n",
-                                        the_planet->a, the_planet->mass * SUN_MASS_IN_EARTH_MASSES,
-                                        existing_mass < (the_planet->mass * .05) ? "" : " (big moons)",
-                                        mass * SUN_MASS_IN_EARTH_MASSES,
-                                        (mass * SUN_MASS_IN_EARTH_MASSES) >= 2.5 ? ", too big" :
-                                                (mass * SUN_MASS_IN_EARTH_MASSES) <= .0001 ? ", too small" : ""
-                                );
+                            // moon escaped!
                         }
                     }
                 }
 
                 if (!finished)
                 {
-                    if (flag_verbose & 0x0100)
-                        fprintf (stderr, "Collision between two planetesimals! "
-                                "%4.2Lf AU (%.2LfEM) + %4.2Lf AU (%.2LfEM = %.2LfEMd + %.2LfEMg [%.3LfEM])-> %5.3Lf AU (%5.3Lf)\n",
-                                the_planet->a, the_planet->mass * SUN_MASS_IN_EARTH_MASSES,
-                                a, mass * SUN_MASS_IN_EARTH_MASSES,
-                                dust_mass * SUN_MASS_IN_EARTH_MASSES, gas_mass * SUN_MASS_IN_EARTH_MASSES,
-                                crit_mass * SUN_MASS_IN_EARTH_MASSES,
-                                new_a, e);
+                    // planets have collided!
 
-                    temp = the_planet->mass + mass;
-                    accrete_dust(&temp, &new_dust, &new_gas,
+                    temp = the_planet.mass + mass;
+                    MassDustGasRecord theRec = accrete_dust(temp, new_dust, new_gas,
                         new_a,e,stell_luminosity_ratio,
                         body_inner_bound,body_outer_bound);
 
-                    the_planet->a = new_a;
-                    the_planet->e = e;
-                    the_planet->mass = temp;
-                    the_planet->dust_mass += dust_mass + new_dust;
-                    the_planet->gas_mass += gas_mass + new_gas;
+                    temp = theRec.mass;
+                    new_dust = theRec.dust;
+                    new_gas = theRec.gas;
+
+                    the_planet.a = new_a;
+                    the_planet.e = e;
+                    the_planet.mass = temp;
+                    the_planet.dust_mass += dust_mass + new_dust;
+                    the_planet.gas_mass += gas_mass + new_gas;
                     if (temp >= crit_mass)
-                        the_planet->gas_giant = TRUE;
+                        the_planet.gas_giant = true;
 
-                    while (the_planet->next_planet != NULL && the_planet->next_planet->a < new_a)
+                    while (the_planet.next_planet != null && the_planet.next_planet.a < new_a)
                     {
-                        next_planet = the_planet->next_planet;
+                        next_planet = the_planet.next_planet;
 
-                        if (the_planet == planet_head)
-                            planet_head = next_planet;
+                        if (the_planet == curPlanet)
+                            curPlanet = next_planet;
                         else
-                            prev_planet->next_planet = next_planet;
+                            prev_planet.next_planet = next_planet;
 
-                        the_planet->next_planet = next_planet->next_planet;
-                        next_planet->next_planet = the_planet;
+                        the_planet.next_planet = next_planet.next_planet;
+                        next_planet.next_planet = the_planet;
                         prev_planet = next_planet;
                     }
                 }
 
-                finished = TRUE;
+                finished = true;
                 break;
             }
             else
@@ -517,80 +541,79 @@ public class Accrete {
 
         if (!(finished))			// Planetesimals didn't collide. Make it a planet.
         {
-            the_planet = (planets *)malloc(sizeof(planets));
+            the_planet = new PlanetObj();
 
-            the_planet->type 			= tUnknown;
-            the_planet->a 				= a;
-            the_planet->e 				= e;
-            the_planet->mass 			= mass;
-            the_planet->dust_mass 		= dust_mass;
-            the_planet->gas_mass 		= gas_mass;
-            the_planet->atmosphere 		= NULL;
-            the_planet->first_moon 		= NULL;
-            the_planet->atmosphere		= NULL;
-            the_planet->albedo			= 0;
-            the_planet->gases			= 0;
-            the_planet->surf_temp		= 0;
-            the_planet->high_temp		= 0;
-            the_planet->low_temp		= 0;
-            the_planet->max_temp		= 0;
-            the_planet->min_temp		= 0;
-            the_planet->greenhs_rise	= 0;
-            the_planet->minor_moons 	= 0;
+            the_planet.planetType 			= PlanetObj.planet_type.tUnknown;
+            the_planet.a 				= a;
+            the_planet.e 				= e;
+            the_planet.mass 			= mass;
+            the_planet.dust_mass 		= dust_mass;
+            the_planet.gas_mass 		= gas_mass;
+            the_planet.atmosphere 		= null;
+            the_planet.first_moon 		= null;
+            the_planet.atmosphere		= null;
+            the_planet.albedo			= 0;
+            // todo the_planet.gases			= 0;
+            the_planet.surf_temp		= 0;
+            the_planet.high_temp		= 0;
+            the_planet.low_temp		= 0;
+            the_planet.max_temp		= 0;
+            the_planet.min_temp		= 0;
+            the_planet.greenhs_rise	= 0;
 
             if ((mass >= crit_mass))
-                the_planet->gas_giant = TRUE;
+                the_planet.gas_giant = true;
             else
-                the_planet->gas_giant = FALSE;
+                the_planet.gas_giant = false;
 
-            if ((planet_head == NULL))
+            if ((curPlanet == null))
             {
-                planet_head = the_planet;
-                the_planet->next_planet = NULL;
+                curPlanet = the_planet;
+                the_planet.next_planet = null;
             }
-            else if ((a < planet_head->a))
+            else if ((a < curPlanet.a))
             {
-                the_planet->next_planet = planet_head;
-                planet_head = the_planet;
+                the_planet.next_planet = curPlanet;
+                curPlanet = the_planet;
             }
-            else if ((planet_head->next_planet == NULL))
-        {
-            planet_head->next_planet = the_planet;
-            the_planet->next_planet = NULL;
-        }
-        else
-        {
-            next_planet = planet_head;
-            while (((next_planet != NULL) && (next_planet->a < a)))
+            else if ((curPlanet.next_planet == null))
             {
-                prev_planet = next_planet;
-                next_planet = next_planet->next_planet;
+                curPlanet.next_planet = the_planet;
+                the_planet.next_planet = null;
             }
-            the_planet->next_planet = next_planet;
-            prev_planet->next_planet = the_planet;
-        }
+            else
+            {
+                next_planet = curPlanet;
+                while (((next_planet != null) && (next_planet.a < a)))
+                {
+                    prev_planet = next_planet;
+                    next_planet = next_planet.next_planet;
+                }
+                the_planet.next_planet = next_planet;
+                prev_planet.next_planet = the_planet;
+            }
         }
     }
 
 
-    planet_pointer dist_planetary_masses(long double stell_mass_ratio,
-                                         long double stell_luminosity_ratio,
-                                         long double inner_dust,
-                                         long double outer_dust,
-                                         long double outer_planet_limit,
-                                         long double dust_density_coeff,
-                                         planet_pointer seed_system,
-                                         int		 do_moons)
+    PlanetObj dist_planetary_masses(double stell_mass_ratio,
+                                         double stell_luminosity_ratio,
+                                         double inner_dust,
+                                         double outer_dust,
+                                         double outer_planet_limit,
+                                         double dust_density_coeff,
+                                         PlanetObj seed_system,
+                                         boolean		 do_moons)
     {
-        long double 	a;
-        long double 	e;
-        long double 	mass;
-        long double		dust_mass;
-        long double		gas_mass;
-        long double 	crit_mass;
-        long double 	planet_inner_bound;
-        long double 	planet_outer_bound;
-        planet_pointer 	seeds = seed_system;
+        double 	a;
+        double 	e;
+        double 	mass;
+        double		dust_mass;
+        double		gas_mass;
+        double 	crit_mass;
+        double 	planet_inner_bound;
+        double 	planet_outer_bound;
+        PlanetObj 	seeds = seed_system;
 
         set_initial_conditions(inner_dust,outer_dust);
         planet_inner_bound = nearest_planet(stell_mass_ratio);
@@ -602,137 +625,58 @@ public class Accrete {
 
         while (dust_left)
         {
-            if (seeds != NULL)
+            if (seeds != null)
             {
-                a = seeds->a;
-                e = seeds->e;
-                seeds = seeds->next_planet;
+                a = seeds.a;
+                e = seeds.e;
+                seeds = seeds.next_planet;
             }
             else
             {
-                a = random_number(planet_inner_bound,planet_outer_bound);
-                e = random_eccentricity( );
+                a = Utils.random_number(planet_inner_bound,planet_outer_bound);
+                e = Utils.random_eccentricity( );
             }
 
-            mass      = PROTOPLANET_MASS;
+            mass      = Constants.PROTOPLANET_MASS;
             dust_mass = 0;
             gas_mass  = 0;
-
-            if (flag_verbose & 0x0200)
-                fprintf (stderr, "Checking %Lg AU.\n",a);
 
             if (dust_available(inner_effect_limit(a, e, mass),
                     outer_effect_limit(a, e, mass)))
             {
-                if (flag_verbose & 0x0100)
-                    fprintf (stderr, "Injecting protoplanet at %Lg AU.\n", a);
 
-                dust_density = dust_density_coeff * sqrt(stell_mass_ratio)
-                        * exp(-ALPHA * pow(a,(1.0 / N)));
+
+                dust_density = dust_density_coeff * Math.sqrt(stell_mass_ratio)
+                        * Math.exp(-Constants.ALPHA * Math.pow(a,(1.0 / Constants.N)));
                 crit_mass = critical_limit(a,e,stell_luminosity_ratio);
-                accrete_dust(&mass, &dust_mass, &gas_mass,
+                MassDustGasRecord theRec = accrete_dust(mass, dust_mass, gas_mass,
                     a,e,crit_mass,
                     planet_inner_bound,
                     planet_outer_bound);
+                mass = theRec.mass;
+                dust_mass = theRec.dust;
+                gas_mass = theRec.gas;
 
-                dust_mass += PROTOPLANET_MASS;
+                dust_mass += Constants.PROTOPLANET_MASS;
 
-                if (mass > PROTOPLANET_MASS)
+                if (mass > Constants.PROTOPLANET_MASS)
                     coalesce_planetesimals(a,e,mass,crit_mass,
                             dust_mass, gas_mass,
                             stell_luminosity_ratio,
                             planet_inner_bound,planet_outer_bound,
                             do_moons);
-                else if (flag_verbose & 0x0100)
-                    fprintf (stderr, ".. failed due to large neighbor.\n");
+                else {
+                    //fprintf(stderr, ".. failed due to large neighbor.\n");
+                }
             }
-            else if (flag_verbose & 0x0200)
-                fprintf (stderr, ".. failed.\n");
-        }
-        return(planet_head);
-    }
+            else {
 
-    void free_dust (dust_pointer head)
-    {
-        dust_pointer	node;
-        dust_pointer	next;
-
-        for(node = head;
-            node != NULL;
-            node = next)
-        {
-            next = node->next_band;
-            free (node);
-        }
-
-    }
-
-    void free_planet (planet_pointer head)
-    {
-        planet_pointer	node;
-        planet_pointer	next;
-
-        for(node = head;
-            node != NULL;
-            node = next)
-        {
-            next = node->next_planet;
-
-            free (node);
-        }
-    }
-
-    void free_generations()
-    {
-        gen_pointer	node;
-        gen_pointer	next;
-
-        for(node = hist_head;
-            node != NULL;
-            node = next)
-        {
-            next = node->next;
-
-            if (node->dusts)
-                free_dust (node->dusts);
-
-            if (node->planets)
-                free_planet (node->planets);
-
-            free (node);
-        }
-
-        if (dust_head != NULL)
-            free_dust (dust_head);
-
-        if (planet_head != NULL)
-            free_planet (planet_head);
-
-        dust_head = NULL;
-        planet_head = NULL;
-        hist_head = NULL;
-    }
-
-    void free_atmosphere(planet_pointer head)
-    {
-        planet_pointer	node;
-
-        for (node = head;
-             node != NULL;
-             node = node->next_planet)
-        {
-            if (node->atmosphere != NULL)
-            {
-                free(node->atmosphere);
-
-                node->atmosphere = NULL;
-            }
-
-            if (node->first_moon != NULL)
-            {
-                free_atmosphere(node->first_moon);
+                //fprintf (stderr, ".. failed.\n");
             }
         }
+        return curPlanet;
     }
+
+
 
 }

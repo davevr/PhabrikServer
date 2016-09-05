@@ -31,6 +31,7 @@ public class PlanetObj {
 
     // planet specific stats
     public int			planet_no;
+    public planet_type  planetType;
     public double a;					/* semi-major axis of solar orbit (in AU)*/
     public double e;					/* eccentricity of solar orbit		 */
     public double	axial_tilt;			/* units of degrees					 */
@@ -71,6 +72,9 @@ public class PlanetObj {
     public double	ice_cover;			/* fraction of surface covered		 */
     public List<Long> atmosphere;      /* list of gasses in the atmosphere */
     public long  planetTypeId;				/* Type code						 */
-    public List<Long> moonList;        /* list of moons, if any */
+    public List<PlanetObj> moonList;        /* list of moons, if any */
+    public PlanetObj first_moon;
+    public PlanetObj next_planet;
+    public PlanetObj prev_planet;
 
 }
