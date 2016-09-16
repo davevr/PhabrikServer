@@ -14,9 +14,6 @@ public class SolSysObj {
     public String systemName;
     public boolean underProtection;
 
-    public List<Long>   sunIdList;
-    public List<Long>   planetIdList;
-    public List<Long>   anomalyIdList;
-    public List<Long>   starbaseIdList;
+    public List<SunObj>   suns;
 
 }

@@ -11,6 +11,18 @@
         <servlet-name>GenerateREST</servlet-name>
         <servlet-class>com.eweware.phabrik.rest.GenerateREST</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>SignInREST</servlet-name>
+        <servlet-class>com.eweware.phabrik.rest.SignInREST</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>ProbeSystemREST</servlet-name>
+        <servlet-class>com.eweware.phabrik.rest.ProbeSystemREST</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>ProbePlanetREST</servlet-name>
+        <servlet-class>com.eweware.phabrik.rest.ProbePlanetREST</servlet-class>
+    </servlet>
 
 
     <servlet-mapping>
@@ -21,5 +33,20 @@
     <servlet-mapping>
         <servlet-name>GenerateREST</servlet-name>
         <url-pattern>api/v1/generate</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>SignInREST</servlet-name>
+        <url-pattern>api/v1/signin</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>ProbeSystemREST</servlet-name>
+        <url-pattern>api/v1/probeSystem</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>ProbePlanetREST</servlet-name>
+        <url-pattern>api/v1/probePlanet</url-pattern>
     </servlet-mapping>
 </web-app>

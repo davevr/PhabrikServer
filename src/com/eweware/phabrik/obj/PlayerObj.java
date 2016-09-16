@@ -1,5 +1,8 @@
 package com.eweware.phabrik.obj;
 
+import org.joda.time.DateTime;
+
+import java.awt.*;
 import java.util.List;
 
 /**
@@ -7,5 +10,9 @@ import java.util.List;
  */
 public class PlayerObj {
     public long Id;
-    public List<Long> popIdList;
+    public List<PointOfPresenceObj> popList;
+    public boolean isAdmin;
+    public String playerName;
+    public DateTime lastlogin;
+
 }

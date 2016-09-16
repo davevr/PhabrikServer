@@ -9,6 +9,7 @@ public class SunObj {
     public long Id;
     public long solarSystemId;
     public List<PlanetObj> planets;
+    public long discovererId;
     public String name;
 
     // simulation variables

@@ -15,6 +15,7 @@ public class Constants {
     public static double EARTH_DENSITY =			(5.52)	;		/* Units of g/cc			*/
     public static double KM_EARTH_RADIUS =			(6378.0);		/* Units of km				*/
 //      EARTH_ACCELERATION		(981.0)			/* Units of cm/sec2			*/
+    public static double EARTH_CIRCUMFERENCE = KM_EARTH_RADIUS * 2 * Math.PI; /* circumference of earth in km */
     public static double EARTH_ACCELERATION =		(980.7)	;		/* Units of cm/sec2			*/
     public static double EARTH_AXIAL_TILT	 =	(23.4)	;		/* Units of degrees			*/
     public static double EARTH_EXOSPHERE_TEMP =	(1273.0);		/* Units of degrees Kelvin	*/

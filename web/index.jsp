@@ -12,5 +12,11 @@
   </head>
   <body>
   Phabrik Server
+  <form action="/api/v1/signin" method="post" >
+  <input type="submit" value="Submit"><br/>
+  Username: <input type="text" title="N" name="N"><br/>
+  Password: <input type="password" title="pwd" name="pwd"><br/>
+      create account: <input type="checkbox" title="create" name="create"><br/>
+  </form>
   </body>
 </html>
