@@ -127,7 +127,7 @@ public class SunDAO {
 
     public static void InsertNewObjIntoDB(SunObj newSun) {
         try {
-            String queryStr = "INSERT INTO PhabrikObjects.suns (solarsystem, planets, name, luminosity, mass, life, age, r_ecosphere, m2, a, e, earthlike, habitable, habitable_jovians, discoverer)" +
+            String queryStr = "INSERT INTO PhabrikObjects.suns (solarsystemid, planets, name, luminosity, mass, life, age, r_ecosphere, m2, a, e, earthlike, habitable, habitable_jovians, discoverer)" +
                     " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
 

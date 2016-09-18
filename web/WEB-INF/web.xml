@@ -42,11 +42,11 @@
 
     <servlet-mapping>
         <servlet-name>ProbeSystemREST</servlet-name>
-        <url-pattern>api/v1/probeSystem</url-pattern>
+        <url-pattern>api/v1/probesystem</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>ProbePlanetREST</servlet-name>
-        <url-pattern>api/v1/probePlanet</url-pattern>
+        <url-pattern>api/v1/probeplanet</url-pattern>
     </servlet-mapping>
 </web-app>

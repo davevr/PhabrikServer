@@ -34,7 +34,7 @@ public class PlanetObj {
     public long systemId;
     public long discovererId;
     public String planetName;
-    public Boolean owned;
+    public boolean owned;
     public long ownerId;
 
     // planet specific stats
@@ -45,7 +45,7 @@ public class PlanetObj {
     public double e;					/* eccentricity of solar orbit		 */
     public double	axial_tilt;			/* units of degrees					 */
     public double mass;				/* mass (in solar masses)			 */
-    public Boolean 		gas_giant;			/* TRUE if the planet is a gas giant */
+    public boolean 		gas_giant;			/* TRUE if the planet is a gas giant */
     public double	dust_mass;			/* mass, ignoring gas				 */
     public double	gas_mass;			/* mass, ignoring dust				 */
      public double moon_a;				/* semi-major axis of lunar orbit (in AU)*/
@@ -56,7 +56,7 @@ public class PlanetObj {
     public double density;			/* density (in g/cc)				 */
     public double orb_period;			/* length of the local year (days)	 */
     public double day;				/* length of the local day (hours)	 */
-    public Boolean 		resonant_period;	/* TRUE if in resonant rotation		 */
+    public boolean 		resonant_period;	/* TRUE if in resonant rotation		 */
     public double	esc_velocity;		/* units of cm/sec					 */
     public double	surf_accel;			/* units of cm/sec2					 */
     public double	surf_grav;			/* units of Earth gravities			 */
@@ -64,7 +64,7 @@ public class PlanetObj {
     public double molec_weight;		/* smallest molecular weight retained*/
     public double	volatile_gas_inventory;
     public double	surf_pressure;		/* units of millibars (mb)			 */
-    public Boolean		 	greenhouse_effect;	/* runaway greenhouse effect?		 */
+    public boolean		 	greenhouse_effect;	/* runaway greenhouse effect?		 */
     public double	boil_point;			/* the boiling point of water (Kelvin)*/
     public double	albedo;				/* albedo of the planet				 */
     public double	exospheric_temp;	/* units of degrees Kelvin			 */
@@ -91,6 +91,11 @@ public class PlanetObj {
 
     public PlanetObj() {
         // init one with all zeros
+        owned = false;
+        greenhouse_effect = false;
+        earthlike = false;
+
+
     }
 
     public PlanetObj(int theNum, double orbit, double ecc, double tilt, double themass, boolean isGass, double dustMass, double gassMass) {
@@ -102,6 +107,7 @@ public class PlanetObj {
         gas_giant = isGass;
         dust_mass = dustMass;
         gas_mass = gassMass;
+
 
     }
 

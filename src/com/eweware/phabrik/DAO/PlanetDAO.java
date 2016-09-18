@@ -239,7 +239,10 @@ public class PlanetDAO {
             statement.setBoolean(47, newObj.earthlike);
             statement.setBoolean(48, newObj.habitable);
             statement.setBoolean(49, newObj.habitable_jovian);
-            statement.setInt(50, newObj.moonList.size());
+            if (newObj.moonList != null)
+                statement.setInt(50, newObj.moonList.size());
+            else
+                statement.setInt(50, 0);
             statement.setString(51, newObj.planetName);
 
 
