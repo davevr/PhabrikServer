@@ -62,7 +62,7 @@ public class PlanetDAO {
             newObj.albedo = rs.getDouble("albedo");
             newObj.exospheric_temp = rs.getDouble("exospheric_temp");
             newObj.estimated_temp = rs.getDouble("estimated_temp");
-            newObj.estimated_terr_temp = rs.getDouble("estimate_terr_temp");
+            newObj.estimated_terr_temp = rs.getDouble("estimated_terr_temp");
             newObj.surf_temp = rs.getDouble("surf_temp");
             newObj.greenhs_rise = rs.getDouble("greenhs_rise");
             newObj.high_temp = rs.getDouble("high_temp");

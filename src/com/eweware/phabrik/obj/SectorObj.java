@@ -24,6 +24,9 @@ public class SectorObj {
     public List<StructureObj>   structures;
     public long ownerId;
     public boolean claimed;
+    public int xLoc;
+    public int yLoc;
+    public long terrainId;
 
     public SectorObj() {
         structures = new ArrayList<>();

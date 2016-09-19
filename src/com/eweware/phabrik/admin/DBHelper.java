@@ -35,7 +35,6 @@ public class DBHelper {
     public static Connection GetConnection() {
         try {
             if ((_currentConnection != null) && _currentConnection.isValid(2)) {
-                log.info("using existing connection");
                 _connectionCount++;
                 return _currentConnection;
             } else {
