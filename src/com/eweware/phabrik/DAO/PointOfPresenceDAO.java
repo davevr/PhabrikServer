@@ -6,10 +6,7 @@ import com.eweware.phabrik.obj.PointOfPresenceObj;
 import com.eweware.phabrik.obj.StructureObj;
 import org.joda.time.DateTime;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -20,6 +17,7 @@ import java.util.logging.Logger;
  */
 public class PointOfPresenceDAO {
     private static final Logger log = Logger.getLogger(PointOfPresenceDAO.class.getName());
+    private static final long kDefaultStructureId = 1;
 
     public static PointOfPresenceObj CreateFromRS(ResultSet rs) {
         PointOfPresenceObj newObj = new PointOfPresenceObj();
@@ -27,7 +25,7 @@ public class PointOfPresenceDAO {
 
             newObj.Id = rs.getLong("Id");
             newObj.playerId = rs.getLong("playerid");
-            newObj.targetId = rs.getLong("structureid");
+            newObj.structureId = rs.getLong("structureid");
             newObj.created = new DateTime(rs.getTimestamp("created"));
             newObj.lastactive = new DateTime(rs.getTimestamp("lastactive"));
 
@@ -38,7 +36,7 @@ public class PointOfPresenceDAO {
 
         if (newObj != null) {
             // inflate secondary structures
-            newObj.structure = StructureDAO.FetchByID(newObj.targetId);
+            newObj.structure = StructureDAO.FetchByID(newObj.structureId);
 
         }
 
@@ -79,6 +77,18 @@ public class PointOfPresenceDAO {
         return newObj;
     }
 
+    public static PointOfPresenceObj CreateForUser(long playerId) {
+        PointOfPresenceObj newPop = new PointOfPresenceObj();
+
+        newPop.playerId = playerId;
+        newPop.created = DateTime.now();
+        newPop.lastactive = DateTime.now();
+        newPop.structureId = PointOfPresenceDAO.kDefaultStructureId;
+        InsertNewObjIntoDB(newPop);
+
+        return newPop;
+    }
+
     public static List<PointOfPresenceObj> FetchForUser(long userId) {
         List<PointOfPresenceObj> popList = new ArrayList<>();
 
@@ -114,5 +124,35 @@ public class PointOfPresenceDAO {
 
         return popList;
 
+    }
+
+    public static void InsertNewObjIntoDB(PointOfPresenceObj newPop) {
+        try {
+            String queryStr = "INSERT INTO PhabrikObjects.pointofpresence (playerid, structureid, created, lastactive )" +
+                    " VALUES (?, ?, ?, ?)";
+            PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
+
+            long structureId = newPop.structureId;
+            if (newPop.structure != null)
+                structureId = newPop.structure.Id;
+
+            Timestamp ts = new Timestamp(new java.util.Date().getTime());
+
+            statement.setDouble(1, newPop.playerId);
+            statement.setDouble(2,structureId);
+            statement.setTimestamp(3,  ts);
+            statement.setTimestamp(4,ts);
+
+            statement.executeUpdate();
+            ResultSet rs = statement.getGeneratedKeys();
+            if (rs.next()){
+                newPop.Id = rs.getLong(1);
+            }
+            rs.close();
+            statement.close();
+
+        } catch (Exception exp) {
+            log.log(Level.SEVERE, exp.getMessage());
+        }
     }
 }

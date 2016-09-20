@@ -23,7 +23,25 @@
         <servlet-name>ProbePlanetREST</servlet-name>
         <servlet-class>com.eweware.phabrik.rest.ProbePlanetREST</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>PopREST</servlet-name>
+        <servlet-class>com.eweware.phabrik.rest.PopREST</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>InitSystemREST</servlet-name>
+        <servlet-class>com.eweware.phabrik.rest.InitSystemREST</servlet-class>
+    </servlet>
 
+
+    <servlet-mapping>
+        <servlet-name>InitSystemREST</servlet-name>
+        <url-pattern>api/v1/initsystem</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>PopREST</servlet-name>
+        <url-pattern>api/v1/pop</url-pattern>
+    </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>Status</servlet-name>

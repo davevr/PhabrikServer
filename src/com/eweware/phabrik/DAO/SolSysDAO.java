@@ -12,6 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -119,6 +120,59 @@ public class SolSysDAO {
 
         return newSys;
     }
+
+    public static List<SolSysObj> InitializeSystems(String sysName, int xLoc, int yLoc, int zLoc, int radius, boolean forceEarth) {
+        List<SolSysObj> newSys = new ArrayList<>();
+        StarGen generator = new StarGen();
+
+        radius--;
+        if (radius < 0)
+            radius = 0;
+
+        for (int x = xLoc - radius; x <= xLoc + radius; x++) {
+            for (int y =yLoc - radius; y <= yLoc + radius; y++) {
+                for (int z = zLoc - radius; z <= zLoc + radius; z++) {
+                    SolSysObj theSys = FetchByXYZ(x,y,z);
+
+                    if (theSys == null) {
+                        theSys = new SolSysObj();
+                        theSys.xLoc = x;
+                        theSys.yLoc = y;
+                        theSys.zLoc = z;
+                        theSys.systemName = String.format("%s [%d, %d, %d]", sysName, x,y,z);
+                        double minMass = 0.3;
+                        double maxMass = 3;
+
+                        SunObj newSun = null;
+
+                        if ((x == xLoc) && (y == yLoc) && (z == zLoc) && forceEarth) {
+                            while (true) {
+                                double mass = ThreadLocalRandom.current().nextDouble(minMass, maxMass);
+
+                                newSun = generator.GenerateSystem(theSys.systemName, mass);
+                                if (newSun.earthlike > 0)
+                                    break;
+                            }
+                        } else {
+                            double mass = ThreadLocalRandom.current().nextDouble(minMass, maxMass);
+
+                             newSun = generator.GenerateSystem(theSys.systemName, mass);
+                        }
+
+                        theSys.suns = new ArrayList<SunObj>();
+                        theSys.suns.add(newSun);
+                        InsertNewObjIntoDB(theSys);
+                    }
+
+                    newSys.add(theSys);
+                }
+            }
+        }
+
+        return newSys;
+    }
+
+
 
     public static long FetchIdForLoc(int x, int y, int z) {
         long newId = 0;
