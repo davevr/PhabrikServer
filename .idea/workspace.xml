@@ -120,7 +120,7 @@
           <file leaf-file-name="PlanetDAO.java" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/src/com/eweware/phabrik/DAO/PlanetDAO.java">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="0.8557692">
+                <state vertical-scroll-proportion="2.4383562">
                   <caret line="263" column="0" selection-start-line="263" selection-start-column="0" selection-end-line="263" selection-end-column="0" />
                   <folding>
                     <element signature="imports" expanded="true" />
@@ -146,7 +146,7 @@
           <file leaf-file-name="SolSysDAO.java" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/src/com/eweware/phabrik/DAO/SolSysDAO.java">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="0.33293268">
+                <state vertical-scroll-proportion="0.94863015">
                   <caret line="92" column="0" selection-start-line="92" selection-start-column="0" selection-end-line="92" selection-end-column="0" />
                   <folding>
                     <element signature="imports" expanded="true" />
@@ -250,8 +250,8 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="width" value="2560" />
-    <option name="height" value="1440" />
+    <option name="width" value="1440" />
+    <option name="height" value="900" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -823,16 +823,16 @@
       <workItem from="1473097916122" duration="1148000" />
       <workItem from="1473103563624" duration="1279000" />
       <workItem from="1473104904998" duration="8566000" />
-      <workItem from="1473653284286" duration="16215000" />
+      <workItem from="1473653284286" duration="16309000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="58220000" />
+    <option name="totallyTimeSpent" value="58314000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="0" width="2560" height="1440" extended-state="0" />
-    <editor active="true" />
+    <frame x="0" y="0" width="1440" height="900" extended-state="0" />
+    <editor active="false" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -846,7 +846,7 @@
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.11795075" sideWeight="0.7714286" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21244635" sideWeight="0.7714286" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Web" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.21212122" sideWeight="0.22857143" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32937685" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -854,7 +854,7 @@
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.37226278" sideWeight="0.49713877" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.61445785" sideWeight="0.49713877" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -1289,7 +1289,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/com/eweware/phabrik/DAO/SolSysDAO.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.33293268">
+        <state vertical-scroll-proportion="0.94863015">
           <caret line="92" column="0" selection-start-line="92" selection-start-column="0" selection-end-line="92" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="true" />
@@ -1317,7 +1317,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/com/eweware/phabrik/DAO/PlanetDAO.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.8557692">
+        <state vertical-scroll-proportion="2.4383562">
           <caret line="263" column="0" selection-start-line="263" selection-start-column="0" selection-end-line="263" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="true" />
