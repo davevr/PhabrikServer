@@ -8,7 +8,7 @@ import org.joda.time.DateTime;
 public class PointOfPresenceObj {
     public long Id;
     public long playerId;   // player who owns this
-    public long targetId;   //
+    public long structureId;
     public DateTime created;
     public DateTime lastactive;
     public StructureObj structure;
