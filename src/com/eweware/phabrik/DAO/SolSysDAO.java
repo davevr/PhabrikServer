@@ -2,6 +2,7 @@ package com.eweware.phabrik.DAO;
 
 import com.eweware.phabrik.admin.DBHelper;
 import com.eweware.phabrik.obj.PlanetObj;
+import com.eweware.phabrik.obj.PlayerObj;
 import com.eweware.phabrik.obj.SolSysObj;
 import com.eweware.phabrik.obj.SunObj;
 import com.eweware.phabrik.sim.StarGen;
@@ -246,6 +247,20 @@ public class SolSysDAO {
         return newObj;
     }
 
+    public static boolean UserHasAccess(long userId, SolSysObj newSystem) {
+        boolean hasAccess = false;
+
+        PlayerObj theObj = PlayerDAO.FetchByID(userId);
+        if (theObj != null) {
+            if (theObj.isAdmin)
+                hasAccess = true;
+            else {
+                // todo - see if the user has discovered this system
+                hasAccess = true;
+            }
+        }
+        return hasAccess;
+    }
 
 
 

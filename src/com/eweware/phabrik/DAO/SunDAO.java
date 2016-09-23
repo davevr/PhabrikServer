@@ -22,7 +22,7 @@ public class SunDAO {
         SunObj newObj = new SunObj();
         try {
             newObj.Id = rs.getLong("Id");
-            newObj.solarSystemId = rs.getInt("solarsystem");
+            newObj.solarSystemId = rs.getInt("solarsystemid");
             newObj.name = rs.getString("name");
             newObj.luminosity = rs.getDouble("luminosity");
             newObj.mass = rs.getDouble("mass");
@@ -31,7 +31,7 @@ public class SunDAO {
             newObj.r_ecosphere = rs.getDouble("r_ecosphere");
             newObj.m2 = rs.getDouble("m2");
             newObj.a = rs.getDouble("a");
-            newObj.e = rs.getDouble("3");
+            newObj.e = rs.getDouble("e");
             newObj.earthlike = rs.getInt("earthlike");
             newObj.habitable = rs.getInt("habitable");
             newObj.habitable_jovians = rs.getInt("habitable_jovians");

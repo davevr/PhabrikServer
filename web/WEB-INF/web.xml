@@ -31,7 +31,60 @@
         <servlet-name>InitSystemREST</servlet-name>
         <servlet-class>com.eweware.phabrik.rest.InitSystemREST</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>StructureREST</servlet-name>
+        <servlet-class>com.eweware.phabrik.rest.StructureREST</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>SectorREST</servlet-name>
+        <servlet-class>com.eweware.phabrik.rest.SectorREST</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>PlanetREST</servlet-name>
+        <servlet-class>com.eweware.phabrik.rest.PlanetREST</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>SolSysREST</servlet-name>
+        <servlet-class>com.eweware.phabrik.rest.SolSysREST</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>GalaxyREST</servlet-name>
+        <servlet-class>com.eweware.phabrik.rest.GalaxyREST</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>TerrainREST</servlet-name>
+        <servlet-class>com.eweware.phabrik.rest.TerrainREST</servlet-class>
+    </servlet>
 
+    <servlet-mapping>
+        <servlet-name>TerrainREST</servlet-name>
+        <url-pattern>api/v1/terrain</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>StructureREST</servlet-name>
+        <url-pattern>api/v1/structure</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>PlanetREST</servlet-name>
+        <url-pattern>api/v1/planet</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>SolSysREST</servlet-name>
+        <url-pattern>api/v1/solsys</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>GalaxyREST</servlet-name>
+        <url-pattern>api/v1/galaxy</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>SectorREST</servlet-name>
+        <url-pattern>api/v1/sector</url-pattern>
+    </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>InitSystemREST</servlet-name>

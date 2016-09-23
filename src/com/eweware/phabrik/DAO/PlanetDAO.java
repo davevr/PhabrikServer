@@ -170,6 +170,10 @@ public class PlanetDAO {
     }
 
 
+    public static boolean UserHasAccess(long userId, long planetId) {
+        // todo - check access controls
+        return true;
+    }
 
 
 

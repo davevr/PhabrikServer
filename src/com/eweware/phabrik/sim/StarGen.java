@@ -2,6 +2,7 @@ package com.eweware.phabrik.sim;
 
 import java.util.*;
 
+import com.eweware.phabrik.api.RomanNumeral;
 import com.eweware.phabrik.obj.PlanetObj;
 import com.eweware.phabrik.obj.SunObj;
 
@@ -816,7 +817,7 @@ public class StarGen {
         counter = 1;
         while (curPlanet != null) {
             sun.planets.add(curPlanet);
-            curPlanet.planetName = sun.name + "-" + Integer.toString(counter++);
+            curPlanet.planetName = sun.name + " " + RomanNumeral.toRoman(counter++);
 
             // listify the moons
             if (curPlanet.first_moon != null) {
@@ -825,7 +826,7 @@ public class StarGen {
                 PlanetObj curMoon = curPlanet.first_moon;
                  while (curMoon != null) {
                      curPlanet.moonList.add(curMoon);
-                     curMoon.planetName = curPlanet.planetName + " moon " + Integer.toString(moonCounter++);
+                     curMoon.planetName = curPlanet.planetName + " moon " + RomanNumeral.toRoman(moonCounter++);
                      curMoon = curMoon.next_planet;
                  }
             }
