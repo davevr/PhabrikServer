@@ -58,66 +58,66 @@
 
     <servlet-mapping>
         <servlet-name>TerrainREST</servlet-name>
-        <url-pattern>api/v1/terrain</url-pattern>
+        <url-pattern>/api/v1/terrain</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>StructureREST</servlet-name>
-        <url-pattern>api/v1/structure</url-pattern>
+        <url-pattern>/api/v1/structure</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>PlanetREST</servlet-name>
-        <url-pattern>api/v1/planet</url-pattern>
+        <url-pattern>/api/v1/planet</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>SolSysREST</servlet-name>
-        <url-pattern>api/v1/solsys</url-pattern>
+        <url-pattern>/api/v1/solsys</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>GalaxyREST</servlet-name>
-        <url-pattern>api/v1/galaxy</url-pattern>
+        <url-pattern>/api/v1/galaxy</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>SectorREST</servlet-name>
-        <url-pattern>api/v1/sector</url-pattern>
+        <url-pattern>/api/v1/sector</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>InitSystemREST</servlet-name>
-        <url-pattern>api/v1/initsystem</url-pattern>
+        <url-pattern>/api/v1/initsystem</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>PopREST</servlet-name>
-        <url-pattern>api/v1/pop</url-pattern>
+        <url-pattern>/api/v1/pop</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>Status</servlet-name>
-        <url-pattern>api/v1/status</url-pattern>
+        <url-pattern>/api/v1/status</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>GenerateREST</servlet-name>
-        <url-pattern>api/v1/generate</url-pattern>
+        <url-pattern>/api/v1/generate</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>SignInREST</servlet-name>
-        <url-pattern>api/v1/signin</url-pattern>
+        <url-pattern>/api/v1/signin</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>ProbeSystemREST</servlet-name>
-        <url-pattern>api/v1/probesystem</url-pattern>
+        <url-pattern>/api/v1/probesystem</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>ProbePlanetREST</servlet-name>
-        <url-pattern>api/v1/probeplanet</url-pattern>
+        <url-pattern>/api/v1/probeplanet</url-pattern>
     </servlet-mapping>
 </web-app>

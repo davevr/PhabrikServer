@@ -13,6 +13,7 @@ public class SolSysObj {
     public long discovererId;
     public String systemName;
     public boolean underProtection;
+    public int planetcount;
 
     public List<SunObj>   suns;
 

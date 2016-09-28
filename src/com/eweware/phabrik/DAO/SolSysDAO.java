@@ -1,12 +1,8 @@
 package com.eweware.phabrik.DAO;
 
 import com.eweware.phabrik.admin.DBHelper;
-import com.eweware.phabrik.obj.PlanetObj;
-import com.eweware.phabrik.obj.PlayerObj;
-import com.eweware.phabrik.obj.SolSysObj;
-import com.eweware.phabrik.obj.SunObj;
+import com.eweware.phabrik.obj.*;
 import com.eweware.phabrik.sim.StarGen;
-import com.sun.media.sound.SoftMixingSourceDataLine;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -24,7 +20,7 @@ import java.util.logging.Logger;
 public class SolSysDAO {
     private static final Logger log = Logger.getLogger(SolSysDAO.class.getName());
 
-    public static SolSysObj CreateFromRS(ResultSet rs) {
+    public static SolSysObj CreateFromRS(ResultSet rs, boolean inflatePlanets) {
         SolSysObj newObj = new SolSysObj();
         int sunCount = 0;
 
@@ -36,6 +32,7 @@ public class SolSysDAO {
             newObj.discovererId = rs.getLong("discovererid");
             newObj.systemName = rs.getString("systemname");
             newObj.underProtection = rs.getBoolean("underprotection");
+            newObj.planetcount = rs.getInt("planetcount");
             sunCount = rs.getInt("suns");
 
         } catch (SQLException sqlexp) {
@@ -45,13 +42,47 @@ public class SolSysDAO {
 
         if (newObj != null) {
             // inflate secondary structures
-            newObj.suns = SunDAO.FetchForSystem(newObj);
+            newObj.suns = SunDAO.FetchForSystem(newObj, inflatePlanets);
 
         }
 
         return newObj;
     }
 
+    public static List<SolSysStatusObj> FetchSolSysStatus(long sysId) {
+        List<SolSysStatusObj> statusList = new ArrayList<>();
+
+        try {
+
+            Connection conn = DBHelper.GetConnection();
+            if (conn != null) {
+
+                String queryStr = "SELECT * FROM phabrikobjects.solarsystems WHERE Id = ?";
+                PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
+                statement.setLong(1, sysId);
+
+                ResultSet newRs = statement.executeQuery();
+
+                while (newRs.next()) {
+                    SolSysStatusObj newObj = new SolSysStatusObj();
+                    newObj.planetId = newRs.getLong("planetid");
+                    newObj.visible = newRs.getBoolean("visible");
+                    statusList.add(newObj);
+                }
+
+            } else {
+                log.log(Level.SEVERE, "No connection");
+            }
+
+        } catch (SQLException sqlexp) {
+            log.log(Level.SEVERE, sqlexp.getMessage());
+
+        } finally {
+            DBHelper.ReleaseConnection();
+        }
+
+        return statusList;
+    }
 
 
     public static SolSysObj FetchByID(Long objId) {
@@ -62,14 +93,14 @@ public class SolSysDAO {
             Connection conn = DBHelper.GetConnection();
             if (conn != null) {
 
-                String queryStr = "SELECT * FROM PhabrikObjects.solarsystems WHERE Id = ?";
+                String queryStr = "SELECT * FROM phabrikobjects.solarsystems WHERE Id = ?";
                 PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
                 statement.setLong(1, objId);
 
                 ResultSet newRs = statement.executeQuery();
 
                 if (newRs.next()) {
-                    newObj = SolSysDAO.CreateFromRS(newRs);
+                    newObj = SolSysDAO.CreateFromRS(newRs, true);
                 } else {
                     log.log(Level.WARNING, "System not found");
                 }
@@ -113,6 +144,7 @@ public class SolSysDAO {
 
                 newSys.suns = new ArrayList<SunObj>();
                 newSys.suns.add(newSun);
+                newSys.planetcount = newSun.planets.size();
                 InsertNewObjIntoDB(newSys);
                 break;
                 }
@@ -162,6 +194,7 @@ public class SolSysDAO {
 
                         theSys.suns = new ArrayList<SunObj>();
                         theSys.suns.add(newSun);
+                        theSys.planetcount = newSun.planets.size();
                         InsertNewObjIntoDB(theSys);
                     }
 
@@ -182,7 +215,7 @@ public class SolSysDAO {
             Connection conn = DBHelper.GetConnection();
             if (conn != null) {
 
-                String queryStr = "SELECT Id FROM PhabrikObjects.solarsystems WHERE xloc = ? and yloc = ? and zloc = ?";
+                String queryStr = "SELECT Id FROM phabrikobjects.solarsystems WHERE xloc = ? and yloc = ? and zloc = ?";
                 PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
                 statement.setInt(1, x);
                 statement.setInt(2, y);
@@ -219,7 +252,7 @@ public class SolSysDAO {
             Connection conn = DBHelper.GetConnection();
             if (conn != null) {
 
-                String queryStr = "SELECT * FROM PhabrikObjects.solarsystems WHERE xloc = ? and yloc = ? and zloc = ?";
+                String queryStr = "SELECT * FROM phabrikobjects.solarsystems WHERE xloc = ? and yloc = ? and zloc = ?";
                 PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
                 statement.setInt(1, x);
                 statement.setInt(2, y);
@@ -228,7 +261,7 @@ public class SolSysDAO {
                 ResultSet newRs = statement.executeQuery();
 
                 if (newRs.next()) {
-                    newObj = SolSysDAO.CreateFromRS(newRs);
+                    newObj = SolSysDAO.CreateFromRS(newRs, true);
                 } else {
                     log.log(Level.WARNING, "System not found");
                 }
@@ -266,7 +299,7 @@ public class SolSysDAO {
 
     private static void InsertNewObjIntoDB(SolSysObj newObj) {
         try {
-            String queryStr = "INSERT INTO PhabrikObjects.solarsystems (xloc, yloc, zloc, discovererid, systemname, underprotection, suns)" +
+            String queryStr = "INSERT INTO phabrikobjects.solarsystems (xloc, yloc, zloc, discovererid, systemname, underprotection, suns, planetcount)" +
                     " VALUES (?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
 
@@ -277,6 +310,7 @@ public class SolSysDAO {
             statement.setString(5, newObj.systemName);
             statement.setBoolean(6, newObj.underProtection);
             statement.setInt(7, newObj.suns.size());
+            statement.setInt(8, newObj.planetcount);
 
             statement.executeUpdate();
             ResultSet rs = statement.getGeneratedKeys();

@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 public class SunDAO {
     private static final Logger log = Logger.getLogger(SunDAO.class.getName());
 
-    public static SunObj CreateFromRS(ResultSet rs) {
+    public static SunObj CreateFromRS(ResultSet rs, boolean fetchplanets) {
         SunObj newObj = new SunObj();
         try {
             newObj.Id = rs.getLong("Id");
@@ -42,7 +42,7 @@ public class SunDAO {
             newObj = null;
         }
 
-        if (newObj != null) {
+        if (newObj != null && fetchplanets) {
             // inflate secondary structures
             newObj.planets = PlanetDAO.FetchForSun(newObj);
 
@@ -61,14 +61,14 @@ public class SunDAO {
             Connection conn = DBHelper.GetConnection();
             if (conn != null) {
 
-                String queryStr = "SELECT * FROM PhabrikObjects.suns WHERE Id = ?";
+                String queryStr = "SELECT * FROM phabrikobjects.suns WHERE Id = ?";
                 PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
                 statement.setLong(1, objId);
 
                 ResultSet newRs = statement.executeQuery();
 
                 if (newRs.next()) {
-                    newObj = SunDAO.CreateFromRS(newRs);
+                    newObj = SunDAO.CreateFromRS(newRs, true);
                 } else {
                     log.log(Level.WARNING, "Sun not found");
                 }
@@ -87,7 +87,7 @@ public class SunDAO {
         return newObj;
     }
 
-    public static List<SunObj> FetchForSystem(SolSysObj solSys) {
+    public static List<SunObj> FetchForSystem(SolSysObj solSys, boolean inflatePlanets) {
         List<SunObj> newList = new ArrayList<>();
 
         try {
@@ -95,14 +95,14 @@ public class SunDAO {
             Connection conn = DBHelper.GetConnection();
             if (conn != null) {
 
-                String queryStr = "SELECT * FROM PhabrikObjects.suns WHERE solarsystemid = ?";
+                String queryStr = "SELECT * FROM phabrikobjects.suns WHERE solarsystemid = ?";
                 PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
                 statement.setLong(1, solSys.Id);
 
                 ResultSet newRs = statement.executeQuery();
 
                 while (newRs.next()) {
-                    SunObj newObj = SunDAO.CreateFromRS(newRs);
+                    SunObj newObj = SunDAO.CreateFromRS(newRs, inflatePlanets);
                     if (newObj != null) {
                         newList.add(newObj);
                     }
@@ -127,7 +127,7 @@ public class SunDAO {
 
     public static void InsertNewObjIntoDB(SunObj newSun) {
         try {
-            String queryStr = "INSERT INTO PhabrikObjects.suns (solarsystemid, planets, name, luminosity, mass, life, age, r_ecosphere, m2, a, e, earthlike, habitable, habitable_jovians, discoverer)" +
+            String queryStr = "INSERT INTO phabrikobjects.suns (solarsystemid, planets, name, luminosity, mass, life, age, r_ecosphere, m2, a, e, earthlike, habitable, habitable_jovians, discoverer)" +
                     " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
 

@@ -51,7 +51,7 @@ public class PointOfPresenceDAO {
             Connection conn = DBHelper.GetConnection();
             if (conn != null) {
 
-                String queryStr = "SELECT * FROM PhabrikObjects.PointOfPresence WHERE Id = ?";
+                String queryStr = "SELECT * FROM phabrikobjects.pointofpresence WHERE Id = ?";
                 PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
                 statement.setLong(1, objId);
 
@@ -97,7 +97,7 @@ public class PointOfPresenceDAO {
             Connection conn = DBHelper.GetConnection();
             if (conn != null) {
 
-                String queryStr = "SELECT * FROM PhabrikObjects.PointOfPresence WHERE playerid = ?";
+                String queryStr = "SELECT * FROM phabrikobjects.pointofpresence WHERE playerid = ?";
                 PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
                 statement.setLong(1, userId);
 
@@ -128,7 +128,7 @@ public class PointOfPresenceDAO {
 
     public static void InsertNewObjIntoDB(PointOfPresenceObj newPop) {
         try {
-            String queryStr = "INSERT INTO PhabrikObjects.pointofpresence (playerid, structureid, created, lastactive )" +
+            String queryStr = "INSERT INTO phabrikobjects.pointofpresence (playerid, structureid, created, lastactive )" +
                     " VALUES (?, ?, ?, ?)";
             PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
 

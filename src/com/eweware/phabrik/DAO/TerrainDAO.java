@@ -12,6 +12,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -101,7 +103,7 @@ public class TerrainDAO {
             Connection conn = DBHelper.GetConnection();
             if (conn != null) {
 
-                String queryStr = "SELECT * FROM PhabrikObjects.terrain WHERE planetid = ?";
+                String queryStr = "SELECT * FROM phabrikobjects.terrain WHERE planetid = ?";
                 PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
                 statement.setLong(1, planetId);
 
@@ -129,7 +131,8 @@ public class TerrainDAO {
 
     public static void InsertNewObjIntoDB(TerrainObj theObj) {
         try {
-            String queryStr = "INSERT INTO PhabrikObjects.terrain (width, height, planetid)" +
+            List<SectorObj> newSectorList = new ArrayList<>();
+            String queryStr = "INSERT INTO phabrikobjects.terrain (width, height, planetid)" +
                     " VALUES (?, ?, ?)";
             PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
 
@@ -141,18 +144,21 @@ public class TerrainDAO {
             ResultSet rs = statement.getGeneratedKeys();
             if (rs.next()){
                 theObj.Id = rs.getLong(1);
+
                 for (int x = 0; x < theObj.width; x++) {
                     for (int y = 0; y < theObj.height; y++) {
                         SectorObj curSector = theObj._sectorArray[x][y];
                         curSector.terrainId = theObj.Id;
-                        SectorDAO.InsertNewObjIntoDB(curSector);
+                        newSectorList.add(curSector);
                     }
 
                 }
-
             }
             rs.close();
             statement.close();
+
+            if (newSectorList.size() > 0)
+                SectorDAO.InsertNewObjsIntoDB(newSectorList);
 
         } catch (Exception exp) {
             log.log(Level.SEVERE, exp.getMessage());

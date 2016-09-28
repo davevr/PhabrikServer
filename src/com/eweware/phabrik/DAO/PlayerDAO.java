@@ -59,7 +59,7 @@ public class PlayerDAO {
             Connection conn = DBHelper.GetConnection();
             if (conn != null) {
 
-                String queryStr = "SELECT * FROM PhabrikObjects.Players WHERE Id = ?";
+                String queryStr = "SELECT * FROM phabrikobjects.players WHERE Id = ?";
                 PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
                 statement.setLong(1, userId);
 
@@ -93,7 +93,7 @@ public class PlayerDAO {
             Connection conn = DBHelper.GetConnection();
             if (conn != null) {
 
-                String queryStr = "SELECT * FROM PhabrikObjects.Players WHERE Name = ?";
+                String queryStr = "SELECT * FROM phabrikobjects.players WHERE Name = ?";
                 PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
                 statement.setString(1, userName.toLowerCase());
 
@@ -137,7 +137,7 @@ public class PlayerDAO {
 
     private static void InsertNewObjIntoDB(PlayerObj newUser) {
         try {
-            String queryStr = "INSERT INTO PhabrikObjects.players (Name, isAdmin, lastlogin) VALUES (?, ?, ?)";
+            String queryStr = "INSERT INTO phabrikobjects.players (Name, isAdmin, lastlogin) VALUES (?, ?, ?)";
             PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
 
             statement.setString(1, newUser.playerName);

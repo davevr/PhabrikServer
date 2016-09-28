@@ -14,6 +14,7 @@ public class SectorObj {
         Gas,
         Dirt,
         Water,
+        Grass,
         Unknown
     }
 

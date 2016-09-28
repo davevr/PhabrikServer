@@ -19,7 +19,7 @@ public class DBHelper {
     private static final Logger log = Logger.getLogger(DBHelper.class.getName());
     public static Connection _currentConnection;
     private static int _connectionCount = 0;
-    private static Boolean useLocalDB = true;
+    private static Boolean useLocalDB = false;
     private static Gson _gson = null;
 
 
@@ -45,7 +45,7 @@ public class DBHelper {
                         SystemProperty.Environment.Value.Production) {
                     log.log(Level.INFO, "connecting from app engine");
                     Class.forName("com.mysql.jdbc.GoogleDriver");
-                    url = "jdbc:google:mysql://heard-gae:heard-sql-master";
+                    url = "jdbc:google:mysql://phabrik-server-01:us-central1:phrabrik-sql-server";
                     _currentConnection = DriverManager.getConnection(url, "root", "All4Sheeple");
 
                 } else {
@@ -59,9 +59,9 @@ public class DBHelper {
                         _currentConnection = DriverManager.getConnection(url, "root", "All4Sheeple");
                     } else {
                         Class.forName("com.mysql.jdbc.Driver");
-                        url = "jdbc:mysql://address=(protocol=tcp)(host=2001:4860:4864:1:f642:a431:cd35:6d27)(port=3306)";
+                        url = "jdbc:mysql://address=(protocol=tcp)(host=104.198.67.6)(port=3306)";
 
-                        _currentConnection = DriverManager.getConnection(url, "davevr", "Andrea1971");
+                        _currentConnection = DriverManager.getConnection(url, "root", "All4Sheeple");
                     }
                 }
             }

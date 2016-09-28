@@ -53,7 +53,7 @@ public class UserAccountDAO {
 
     private static void InsertNewObjIntoDB(UserAccountObj newUser) {
         try {
-            String queryStr = "INSERT INTO PhabrikObjects.useraccounts (U, S, D, c) VALUES (?, ?, ?, ?)";
+            String queryStr = "INSERT INTO phabrikobjects.useraccounts (U, S, D, c) VALUES (?, ?, ?, ?)";
             PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
 
             statement.setString(1, newUser.U);
@@ -82,7 +82,7 @@ public class UserAccountDAO {
             Connection conn = DBHelper.GetConnection();
             if (conn != null) {
 
-                String queryStr = "SELECT * FROM PhabrikObjects.useraccounts WHERE U = ?";
+                String queryStr = "SELECT * FROM phabrikobjects.useraccounts WHERE U = ?";
                 PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
                 statement.setString(1, userName.toLowerCase());
 
@@ -112,7 +112,7 @@ public class UserAccountDAO {
             Connection conn = DBHelper.GetConnection();
             if (conn != null) {
 
-                String queryStr = "SELECT * FROM PhabrikObjects.useraccounts WHERE U = ?";
+                String queryStr = "SELECT * FROM phabrikobjects.useraccounts WHERE U = ?";
                 PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
                 statement.setString(1, userName.toLowerCase());
 

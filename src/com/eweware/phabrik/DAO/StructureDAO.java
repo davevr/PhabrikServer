@@ -6,6 +6,8 @@ import com.eweware.phabrik.obj.StructureObj;
 import org.joda.time.DateTime;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -64,24 +66,24 @@ public class StructureDAO {
         return newObj;
     }
 
-    public static StructureObj FetchBySectorID(Long sectorId) {
-        StructureObj newObj = null;
+    public static List<StructureObj> FetchBySectorID(Long sectorId) {
+        List<StructureObj> structureList = new ArrayList<>();
 
         try {
 
             Connection conn = DBHelper.GetConnection();
             if (conn != null) {
 
-                String queryStr = "SELECT * FROM PhabrikObjects.Structures WHERE sectorid = ?";
+                String queryStr = "SELECT * FROM phabrikobjects.structures WHERE sectorid = ?";
                 PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
                 statement.setLong(1, sectorId);
 
                 ResultSet newRs = statement.executeQuery();
 
-                if (newRs.next()) {
-                    newObj = StructureDAO.CreateFromRS(newRs);
-                } else {
-                    log.log(Level.WARNING, "Structure not found");
+                while (newRs.next()) {
+                    StructureObj newObj = StructureDAO.CreateFromRS(newRs);
+                    if (newObj != null)
+                        structureList.add(newObj);
                 }
 
             } else {
@@ -95,7 +97,7 @@ public class StructureDAO {
             DBHelper.ReleaseConnection();
         }
 
-        return newObj;
+        return structureList;
     }
 
     public static StructureObj FetchByID(Long objId) {
@@ -106,7 +108,7 @@ public class StructureDAO {
             Connection conn = DBHelper.GetConnection();
             if (conn != null) {
 
-                String queryStr = "SELECT * FROM PhabrikObjects.Structures WHERE Id = ?";
+                String queryStr = "SELECT * FROM phabrikobjects.structures WHERE Id = ?";
                 PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
                 statement.setLong(1, objId);
 
@@ -135,7 +137,7 @@ public class StructureDAO {
 
     public static void InsertNewObjIntoDB(StructureObj newStruct) {
         try {
-            String queryStr = "INSERT INTO PhabrikObjects.Structures (sectorid, xloc, yloc, xsize, ysize, curpop, maxpop, curhp, maxhp, " +
+            String queryStr = "INSERT INTO phabrikobjects.structures (sectorid, xloc, yloc, xsize, ysize, curpop, maxpop, curhp, maxhp, " +
                     "minpowerneed, minpopneed, solidstoragespace, gasstoragespace, foodstoragespace, liquidstoragespace, energystoragespace, " +
                     "strangestoragespace, maxsolidstoragespace, maxgasstoragespace, maxfoodstoragespace, maxliquidstoragespace, maxenergystoragespace, " +
                     "maxstrangestoragespace, creationdate, lasttick, ownerid, physicaldefense, energydefense, ispublic, " +

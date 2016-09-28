@@ -108,7 +108,7 @@ public class PlanetDAO {
             Connection conn = DBHelper.GetConnection();
             if (conn != null) {
 
-                String queryStr = "SELECT * FROM PhabrikObjects.planets WHERE Id = ?";
+                String queryStr = "SELECT * FROM phabrikobjects.planets WHERE Id = ?";
                 PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
                 statement.setLong(1, objId);
 
@@ -134,7 +134,7 @@ public class PlanetDAO {
         return newObj;
     }
 
-    public static List<PlanetObj> FetchForSun(SunObj theSun) {
+    public static List<PlanetObj> FetchForSunbyId(long theSunId) {
         List<PlanetObj> newList = new ArrayList<>();
 
         try {
@@ -142,17 +142,16 @@ public class PlanetDAO {
             Connection conn = DBHelper.GetConnection();
             if (conn != null) {
 
-                String queryStr = "SELECT * FROM PhabrikObjects.planets WHERE sun = ? ORDER BY planet_no ASC";
+                String queryStr = "SELECT * FROM phabrikobjects.planets WHERE sun = ? ORDER BY planet_no ASC";
                 PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
-                statement.setLong(1, theSun.Id );
+                statement.setLong(1, theSunId );
 
                 ResultSet newRs = statement.executeQuery();
 
                 while (newRs.next()) {
                     PlanetObj newObj = PlanetDAO.CreateFromRS(newRs);
                     if (newObj != null)
-                        newObj.sun = theSun;
-                        newList.add(newObj);
+                       newList.add(newObj);
                 }
 
             } else {
@@ -169,6 +168,16 @@ public class PlanetDAO {
         return newList;
     }
 
+    public static List<PlanetObj> FetchForSun(SunObj theSun) {
+        List<PlanetObj> newList = FetchForSunbyId(theSun.Id);
+
+        for (PlanetObj  curPlanet : newList) {
+            curPlanet.sun = theSun;
+        }
+
+        return newList;
+    }
+
 
     public static boolean UserHasAccess(long userId, long planetId) {
         // todo - check access controls
@@ -179,7 +188,7 @@ public class PlanetDAO {
 
     public static void InsertNewObjIntoDB(PlanetObj newObj) {
         try {
-            String queryStr = "INSERT INTO PhabrikObjects.planets " +
+            String queryStr = "INSERT INTO phabrikobjects.planets " +
                     "(planet_type, systemid, discovererid, planet_no, a, e, owned, ownerid, sun, axial_tilt, mass, gas_giant, " +
                     "dust_mass, gas_mass, moon_a, moon_e, core_radius, radius, orbit_zone, density, orb_period, day, resonant_period, " +
                     "esc_velocity, surf_accel, surf_grav, rms_velocity, molec_weight, volatile_gas_inventory, surf_pressure, " +
