@@ -15,7 +15,7 @@ import java.util.logging.Logger;
  * Created by davidvronay on 9/5/16.
  */
 public class StructureDAO {
-    private static final Logger log = Logger.getLogger(PointOfPresenceDAO.class.getName());
+    private static final Logger log = Logger.getLogger(StructureTypeDAO.class.getName());
 
     public static StructureObj CreateFromRS(ResultSet rs) {
         StructureObj newObj = new StructureObj();
@@ -53,7 +53,8 @@ public class StructureDAO {
             newObj.isPublic = rs.getBoolean("ispublic");
             newObj.isVacuumSafe = rs.getBoolean("isvacuumsafe");
             newObj.isRadiationSafe = rs.getBoolean("isradiationsafe");
-            newObj.structureType = StructureObj.StructureType.valueOf(rs.getString("structureType"));
+            newObj.structureTypeId = rs.getLong("structuretypeid");
+            newObj.nickname = rs.getString("nickname");
 
 
         } catch (SQLException sqlexp) {
@@ -141,8 +142,8 @@ public class StructureDAO {
                     "minpowerneed, minpopneed, solidstoragespace, gasstoragespace, foodstoragespace, liquidstoragespace, energystoragespace, " +
                     "strangestoragespace, maxsolidstoragespace, maxgasstoragespace, maxfoodstoragespace, maxliquidstoragespace, maxenergystoragespace, " +
                     "maxstrangestoragespace, creationdate, lasttick, ownerid, physicaldefense, energydefense, ispublic, " +
-                    "isvacuumsafe, isradiationsafe, structuretype )" +
-                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    "isvacuumsafe, isradiationsafe, structuretypeid, nickname )" +
+                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
             PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
 
             statement.setLong(1, newStruct.sectorId);
@@ -176,7 +177,8 @@ public class StructureDAO {
             statement.setBoolean(29, newStruct.isPublic);
             statement.setBoolean(30, newStruct.isVacuumSafe);
             statement.setBoolean(31, newStruct.isRadiationSafe);
-            statement.setString(32,newStruct.structureType.toString());
+            statement.setLong(32, newStruct.structureTypeId);
+            statement.setString(33, newStruct.nickname);
 
             statement.executeUpdate();
             ResultSet rs = statement.getGeneratedKeys();

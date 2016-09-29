@@ -6,18 +6,6 @@ import org.joda.time.DateTime;
  * Created by davidvronay on 9/5/16.
  */
 public class StructureObj {
-
-    public enum StructureType {
-        Mine,
-        Farm,
-        Garden,
-        Housing,
-        Factory,
-        School,
-        Library,
-        SpacePort,
-        Storage
-    }
     public long Id;
     public SectorObj sector;
     public long sectorId;
@@ -51,7 +39,8 @@ public class StructureObj {
     public boolean isVacuumSafe;
     public boolean isRadiationSafe;
     public boolean isPublic;
-    public StructureType structureType;
+    public long structureTypeId;
+    public String nickname;
 
     public StructureObj() {
         // empty
@@ -60,7 +49,7 @@ public class StructureObj {
     }
 
     public StructureObj(StructureObj master) {
-        structureType = master.structureType;
+        structureTypeId = master.structureTypeId;
         isPublic = master.isPublic;
         xLoc = master.xLoc;
         yLoc = master.yLoc;
