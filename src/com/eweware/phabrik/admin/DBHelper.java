@@ -19,7 +19,7 @@ public class DBHelper {
     private static final Logger log = Logger.getLogger(DBHelper.class.getName());
     public static Connection _currentConnection;
     private static int _connectionCount = 0;
-    private static Boolean useLocalDB = false;
+    private static Boolean useLocalDB = true;//false;
     private static Gson _gson = null;
 
 

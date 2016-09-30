@@ -282,6 +282,8 @@ public class SectorDAO {
         }
     }
 
+
+
     public static void InsertNewObjsIntoDB(List<SectorObj> newSectorList) {
         try {
             String queryStr = "INSERT INTO phabrikobjects.sectors (lowtemp, hightemp, surfacetype, ownerid, claimed, xloc, yloc, terrainid )";

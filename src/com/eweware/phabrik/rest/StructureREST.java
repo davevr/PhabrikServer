@@ -21,7 +21,53 @@ import java.util.List;
  */
 public class StructureREST extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        long userId = Authenticator.CurrentUserId(request.getSession());
 
+        if (userId == 0) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        } else {
+            String structureStr = request.getParameter("structure");
+
+
+            if (structureStr != null) {
+                // return the catalog of all types
+                StructureObj theStruct = RestUtils.get_gson().fromJson(structureStr, StructureObj.class);
+
+                if (theStruct != null)
+                    StructureDAO.InsertNewObjIntoDB(theStruct);
+
+                response.setContentType("application/json");
+                response.setStatus(HttpServletResponse.SC_OK);
+                PrintWriter out = response.getWriter();
+
+                RestUtils.get_gson().toJson(theStruct.Id, out);
+                out.flush();
+                out.close();
+            }
+        }
+    }
+
+    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        long userId = Authenticator.CurrentUserId(request.getSession());
+
+        if (userId == 0) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        } else {
+            String updateStr = request.getParameter("updateloc");
+            String structureStr = request.getParameter("structureid");
+
+            if (updateStr != null && structureStr != null) {
+                String xlocStr = request.getParameter("xloc");
+                String ylocStr = request.getParameter("yloc");
+                long structureId = Long.parseLong(structureStr);
+                int xLoc = Integer.parseInt(xlocStr);
+                int yLoc = Integer.parseInt(ylocStr);
+
+
+                StructureDAO.UpdateStructureLoc(structureId, xLoc, yLoc);
+                response.setStatus(HttpServletResponse.SC_OK);
+            }
+        }
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {

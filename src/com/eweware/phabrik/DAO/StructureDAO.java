@@ -192,4 +192,25 @@ public class StructureDAO {
             log.log(Level.SEVERE, exp.getMessage());
         }
     }
+
+    public static void UpdateStructureLoc(long structureId, int xloc, int yloc) {
+        try {
+            String queryStr = "UPDATE phabrikobjects.structures " +
+                    "SET xloc = ? , " +
+                    "yloc = ? " +
+                    "WHERE Id = ?";
+            PreparedStatement statement = DBHelper.PrepareStatement(queryStr, true);
+
+            statement.setInt(1, xloc);
+            statement.setInt(2,yloc);
+            statement.setLong(3,structureId);
+
+            statement.executeUpdate();
+            int updatedRows = statement.getUpdateCount();
+            statement.close();
+
+        } catch (Exception exp) {
+            log.log(Level.SEVERE, exp.getMessage());
+        }
+    }
 }
