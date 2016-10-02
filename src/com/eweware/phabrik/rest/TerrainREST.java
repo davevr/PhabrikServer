@@ -32,20 +32,22 @@ public class TerrainREST extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         } else {
             String sectorMapStr = request.getParameter("sectormap");
-            String paintOnlyStr = request.getParameter("paint");
 
-            SectorObj[] sectorList = RestUtils.get_gson().fromJson(sectorMapStr, SectorObj[].class);
-            boolean paintOnly = Boolean.parseBoolean(paintOnlyStr);
+             if (sectorMapStr != null) {
+                String paintOnlyStr = request.getParameter("paint");
+                SectorObj[] sectorList = RestUtils.get_gson().fromJson(sectorMapStr, SectorObj[].class);
+                boolean paintOnly = Boolean.parseBoolean(paintOnlyStr);
 
-            SectorDAO.UpdateSectors(sectorList, paintOnly);
+                SectorDAO.UpdateSectors(sectorList, paintOnly);
 
-            response.setContentType("application/json");
-            response.setStatus(HttpServletResponse.SC_OK);
-            PrintWriter out = response.getWriter();
+                response.setContentType("application/json");
+                response.setStatus(HttpServletResponse.SC_OK);
+                PrintWriter out = response.getWriter();
 
-            RestUtils.get_gson().toJson(true, out);
-            out.flush();
-            out.close();
+                RestUtils.get_gson().toJson(true, out);
+                out.flush();
+                out.close();
+            }
         }
     }
 

@@ -55,6 +55,15 @@
         <servlet-name>TerrainREST</servlet-name>
         <servlet-class>com.eweware.phabrik.rest.TerrainREST</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>UploadImageREST</servlet-name>
+        <servlet-class>com.eweware.phabrik.rest.UploadImageREST</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>UploadImageREST</servlet-name>
+        <url-pattern>/api/v1/uploadImage</url-pattern>
+    </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>TerrainREST</servlet-name>

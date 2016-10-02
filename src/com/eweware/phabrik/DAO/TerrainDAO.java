@@ -65,7 +65,8 @@ public class TerrainDAO {
             newObj.Id = rs.getLong("Id");
             newObj.width = rs.getInt("width");
             newObj.height = rs.getInt("height");
-            newObj.planetId = rs.getLong("planetId");
+            newObj.planetId = rs.getLong("planetid");
+
         } catch (SQLException sqlexp) {
             log.log(Level.SEVERE, sqlexp.getMessage());
             newObj = null;
@@ -128,6 +129,8 @@ public class TerrainDAO {
 
         return newObj;
     }
+
+
 
     public static void InsertNewObjIntoDB(TerrainObj theObj) {
         try {

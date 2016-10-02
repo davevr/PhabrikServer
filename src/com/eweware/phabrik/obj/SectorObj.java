@@ -28,6 +28,7 @@ public class SectorObj {
     public int xLoc;
     public int yLoc;
     public long terrainId;
+    public String sectorUrl;
 
     public SectorObj() {
         structures = new ArrayList<>();

@@ -30,7 +30,7 @@ public class SectorDAO {
             newObj.xLoc = rs.getInt("xloc");
             newObj.yLoc = rs.getInt("yloc");
             newObj.terrainId = rs.getLong("terrainid");
-
+            newObj.sectorUrl = rs.getString("sectorurl");
             if (loadStructures) {
                 newObj.structures = StructureDAO.FetchBySectorID(newObj.Id);
             }
@@ -282,7 +282,22 @@ public class SectorDAO {
         }
     }
 
+    public static void UpdateSectorUrl(long sectorId, String newUrl) {
+        try {
+            String queryStr = "UPDATE phabrikobjects.sectors SET sectorurl = ? WHERE Id = ?";
+            PreparedStatement statement = DBHelper.PrepareStatement(queryStr, false);
 
+            statement.setString(1, newUrl);
+            statement.setLong(2, sectorId);
+
+            statement.executeUpdate();
+
+            statement.close();
+
+        } catch (Exception exp) {
+            log.log(Level.SEVERE, exp.getMessage());
+        }
+    }
 
     public static void InsertNewObjsIntoDB(List<SectorObj> newSectorList) {
         try {
